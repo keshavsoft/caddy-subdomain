@@ -1,0 +1,44 @@
+{
+  "name": "caddy-subdomain",
+  "version": "1.0.0",
+  "description": "Atomic CLI and library to inspect, validate, and programmatically add subdomains to Caddy JSON configurations",
+  "license": "ISC",
+  "author": "KeshavSoft",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/keshavsoft/caddy-subdomain.git"
+  },
+  "bugs": {
+    "url": "https://github.com/keshavsoft/caddy-subdomain/issues"
+  },
+  "homepage": "https://keshavsoft.github.io/caddy-subdomain/",
+  "type": "module",
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "bin": {
+    "caddy-subdomain": "bin/index.js"
+  },
+  "files": [
+    "bin",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "start": "node bin/index.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "caddy-template": "^1.0.0"
+  },
+  "keywords": [
+    "caddy",
+    "caddy-server",
+    "subdomain",
+    "reverse-proxy",
+    "json",
+    "keshavsoft"
+  ]
+}
