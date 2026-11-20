@@ -36,7 +36,7 @@ export function resolveDefaultPath(customPath) {
 
 export function printHelp() {
   console.log(`
-caddy-subdomain (v1.0.0)
+caddy-subdomain (v1.1.1)
 The Zero-Config Subdomain Engine for Caddy Server.
 
 Zero configuration required:
@@ -78,7 +78,7 @@ export async function run(args = process.argv.slice(2)) {
   }
 
   if (args.includes("-v") || args.includes("--version")) {
-    console.log("1.0.0");
+    console.log("1.1.1");
     return;
   }
 
