@@ -1,7 +1,7 @@
-import { hasSubdomain, readCaddyConfig } from "../../../src/v1/index.js";
+import { hasSubdomain, getSubdomainEntry, readCaddyConfig } from "../../../src/v1/index.js";
 import { resolve } from "node:path";
 
-console.log("=== Sample 04: Check Subdomain Existence ===");
+console.log("=== Sample 04: Check & Inspect Subdomain Entries ===");
 
 const sampleFile = resolve(process.cwd(), "./samples/caddy.sample.json");
 console.log(`Reading configuration from: ${sampleFile}\n`);
@@ -15,7 +15,10 @@ const domainsToCheck = [
 ];
 
 for (const domain of domainsToCheck) {
-  const exists = hasSubdomain(config, domain);
-  const statusIcon = exists ? "✅ EXISTS" : "❌ NOT FOUND";
-  console.log(`Checking '${domain}': ${statusIcon}`);
+  const entry = getSubdomainEntry(config, domain);
+  if (entry) {
+    console.log(`✅ '${domain}' -> EXISTS in ${entry.server}.routes[${entry.index}] (${entry.type} -> ${entry.target})`);
+  } else {
+    console.log(`❌ '${domain}' -> NOT FOUND in Caddy JSON`);
+  }
 }

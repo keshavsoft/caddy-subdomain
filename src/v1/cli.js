@@ -5,6 +5,8 @@ import {
   readCaddyConfig,
   listSubdomains,
   hasSubdomain,
+  getSubdomainEntry,
+  listSubdomainDetails,
   addSubdomainToFile,
   addProbeSubdomainToFile
 } from "./index.js";
@@ -61,9 +63,9 @@ Here are the 2 primary commands you need:
                       with zero downtime and automatic backup.
 
 ------------------------------------------------------------
-UTILITY COMMANDS:
-    • Check existence : npx caddy-subdomain check call.keshavsoft.com
-    • List subdomains : npx caddy-subdomain list
+OBSERVABILITY & UTILITY COMMANDS:
+    • Check & Inspect entry : npx caddy-subdomain check call.keshavsoft.com
+    • List all with targets : npx caddy-subdomain list
 
 OPTIONS:
     --no-reload       Skip automatic Caddy reload
@@ -119,17 +121,23 @@ Sample:
     try {
       const config = readCaddyConfig(configPath);
       const alreadyPresent = hasSubdomain(config, domain);
+      let injectedRoute = null;
 
       if (!alreadyPresent || force) {
-        addProbeSubdomainToFile(configPath, {
+        const result = addProbeSubdomainToFile(configPath, {
           domain,
           force,
           backup: !noBackup
         });
+        injectedRoute = result.newRoute;
+      } else {
+        const entry = getSubdomainEntry(config, domain);
+        injectedRoute = entry?.route;
       }
 
       console.log(`Subdomain:        ${domain}`);
       console.log(`Present in Caddy: ${alreadyPresent && !force ? "Yes" : "Yes (Probe Active)"}`);
+      console.log(`Entry Type:       Level-1 Smoke Probe (static_response 200 OK)`);
 
       // Automatic Caddy reload
       if (!noReload) {
@@ -155,6 +163,11 @@ Sample:
       } catch {
         console.log(`Live HTTPS:       Pending (Waiting for DNS / SSL propagation)`);
       }
+
+      if (injectedRoute) {
+        console.log(`\nCaddy JSON Entry:`);
+        console.log(JSON.stringify(injectedRoute, null, 2));
+      }
     } catch (err) {
       console.error(`Error: ${err.message}`);
       process.exitCode = 1;
@@ -163,16 +176,16 @@ Sample:
   }
 
   // ----------------------------------------------------
-  // 2. CHECK (Presence check: Yes / No)
+  // 2. CHECK / INSPECT (Is it present & what is the entry?)
   // ----------------------------------------------------
-  if (command === "check") {
+  if (command === "check" || command === "inspect") {
     const domain = args[1];
     if (!domain || domain.startsWith("-")) {
       console.error(`
-❌ Error: 'check' requires 1 input: <domain>
+❌ Error: '${command}' requires 1 input: <domain>
 
 Sample:
-  npx caddy-subdomain check call.keshavsoft.com
+  npx caddy-subdomain ${command} call.keshavsoft.com
 `);
       process.exitCode = 1;
       return;
@@ -183,12 +196,32 @@ Sample:
 
     try {
       const config = readCaddyConfig(configPath);
-      const exists = hasSubdomain(config, domain);
+      const entry = getSubdomainEntry(config, domain);
+
       console.log(`Subdomain:        ${domain}`);
-      console.log(`Present in Caddy: ${exists ? "Yes" : "No"}`);
-      if (!exists) {
+      if (!entry) {
+        console.log(`Present in Caddy: No`);
+        console.log(`Config File:      ${configPath}`);
+        console.log(`\n(No entry found in Caddy JSON. Run 'npx caddy-subdomain probe ${domain}' to add)`);
         process.exitCode = 1;
+        return;
       }
+
+      console.log(`Present in Caddy: Yes`);
+      const typeLabel =
+        entry.type === "probe"
+          ? "Level-1 Smoke Probe (static_response)"
+          : entry.type === "reverse_proxy"
+          ? `Level-2 Reverse Proxy (➔ ${entry.target})`
+          : `${entry.type} (➔ ${entry.target})`;
+
+      console.log(`Entry Type:       ${typeLabel}`);
+      console.log(`Target:           ${entry.target}`);
+      console.log(`Location:         apps.http.servers.${entry.server}.routes[${entry.index}]`);
+      console.log(`Config File:      ${configPath}`);
+
+      console.log(`\nCaddy JSON Entry:`);
+      console.log(JSON.stringify(entry.route, null, 2));
     } catch (err) {
       console.error(`Error: ${err.message}`);
       process.exitCode = 1;
@@ -221,7 +254,7 @@ Sample:
     const configPath = resolveDefaultPath(nonFlags[0]);
 
     try {
-      addSubdomainToFile(configPath, {
+      const result = addSubdomainToFile(configPath, {
         domain,
         port: Number(port),
         force: true, // auto-upgrades probe to backend!
@@ -230,6 +263,7 @@ Sample:
 
       console.log(`Subdomain:        ${domain}`);
       console.log(`Target:           localhost:${port}`);
+      console.log(`Entry Type:       Level-2 Reverse Proxy`);
 
       // Automatic Caddy reload
       if (!noReload) {
@@ -241,6 +275,11 @@ Sample:
         }
       }
       console.log(`Status:           Active`);
+
+      if (result.newRoute) {
+        console.log(`\nCaddy JSON Entry:`);
+        console.log(JSON.stringify(result.newRoute, null, 2));
+      }
     } catch (err) {
       console.error(`Error: ${err.message}`);
       process.exitCode = 1;
@@ -249,7 +288,7 @@ Sample:
   }
 
   // ----------------------------------------------------
-  // 4. LIST (List all configured subdomains)
+  // 4. LIST (List all configured subdomains with targets)
   // ----------------------------------------------------
   if (command === "list") {
     const nonFlags = args.slice(1).filter((a) => !a.startsWith("-"));
@@ -257,13 +296,17 @@ Sample:
 
     try {
       const config = readCaddyConfig(configPath);
-      const domains = listSubdomains(config);
+      const details = listSubdomainDetails(config);
       console.log(`Config: ${configPath}`);
-      console.log(`Subdomains (${domains.length}):`);
-      if (domains.length === 0) {
+      console.log(`Subdomains (${details.length}):`);
+      if (details.length === 0) {
         console.log(`  (none configured)`);
       } else {
-        domains.forEach((d, i) => console.log(`  ${i + 1}. ${d}`));
+        details.forEach((item, i) => {
+          const typeBadge = item.type === "probe" ? "[probe]" : `[${item.type}]`;
+          const paddedDomain = item.domain.padEnd(28, " ");
+          console.log(`  ${i + 1}. ${paddedDomain} ➔  ${item.target.padEnd(20, " ")} ${typeBadge}`);
+        });
       }
     } catch (err) {
       console.error(`Error: ${err.message}`);

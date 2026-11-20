@@ -12,7 +12,9 @@ import {
   addProbeSubdomain,
   addProbeSubdomainToFile,
   addSubdomain,
-  addSubdomainToFile
+  addSubdomainToFile,
+  getSubdomainEntry,
+  listSubdomainDetails
 } from "../src/index.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -138,4 +140,27 @@ test("addSubdomainToFile creates backup and updates file", () => {
   } finally {
     if (existsSync(tempPath)) unlinkSync(tempPath);
   }
+});
+
+test("getSubdomainEntry inspects existing route entry and raw AST", () => {
+  const config = readCaddyConfig(samplePath);
+  const entry = getSubdomainEntry(config, "quotation.keshavsoft.com");
+  assert.ok(entry);
+  assert.equal(entry.domain, "quotation.keshavsoft.com");
+  assert.equal(entry.server, "srv0");
+  assert.equal(entry.index, 0);
+  assert.equal(entry.type, "reverse_proxy");
+  assert.equal(entry.target, "localhost:8080");
+  assert.ok(entry.route);
+
+  const missing = getSubdomainEntry(config, "nonexistent.keshavsoft.com");
+  assert.equal(missing, null);
+});
+
+test("listSubdomainDetails returns mapped details for all domains", () => {
+  const config = readCaddyConfig(samplePath);
+  const details = listSubdomainDetails(config);
+  assert.equal(details.length, 2);
+  assert.equal(details[0].domain, "quotation.keshavsoft.com");
+  assert.equal(details[0].type, "reverse_proxy");
 });

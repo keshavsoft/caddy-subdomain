@@ -87,6 +87,96 @@ export function hasSubdomain(caddyConfig, domain) {
 }
 
 /**
+ * Find and inspect the specific Caddy route entry for a subdomain.
+ * Returns entry type, target, server name, route index, and raw Caddy route AST.
+ * @param {object} caddyConfig
+ * @param {string} domain
+ * @returns {object|null}
+ */
+export function getSubdomainEntry(caddyConfig, domain) {
+  if (!domain || typeof domain !== "string") return null;
+  const target = domain.trim().toLowerCase();
+  const servers = caddyConfig?.apps?.http?.servers || {};
+
+  for (const [serverName, srv] of Object.entries(servers)) {
+    const routes = srv.routes || [];
+    for (let i = 0; i < routes.length; i++) {
+      const route = routes[i];
+      const matchHosts = [];
+      for (const match of route.match || []) {
+        if (Array.isArray(match.host)) {
+          matchHosts.push(...match.host);
+        }
+      }
+      if (matchHosts.some((h) => h.toLowerCase() === target)) {
+        let type = "custom";
+        let targetDesc = "custom";
+
+        for (const h of route.handle || []) {
+          if (h.handler === "static_response") {
+            type = "probe";
+            targetDesc = `static_response (${h.status_code || 200} OK)`;
+            break;
+          }
+          if (h.handler === "reverse_proxy") {
+            type = "reverse_proxy";
+            const up = (h.upstreams || []).map((u) => u.dial).join(", ");
+            targetDesc = up || "reverse_proxy";
+            break;
+          }
+          if (h.handler === "subroute") {
+            for (const sub of h.routes || []) {
+              for (const subH of sub.handle || []) {
+                if (subH.handler === "reverse_proxy") {
+                  type = "reverse_proxy";
+                  const dials = (subH.upstreams || []).map((u) => u.dial).join(", ");
+                  targetDesc = dials || "reverse_proxy";
+                  break;
+                }
+                if (subH.handler === "file_server") {
+                  type = "file_server";
+                  targetDesc = "file_server";
+                  break;
+                }
+              }
+            }
+          }
+        }
+
+        return {
+          domain,
+          server: serverName,
+          index: i,
+          type,
+          target: targetDesc,
+          route
+        };
+      }
+    }
+  }
+
+  return null;
+}
+
+/**
+ * List all configured subdomains along with their entry type and target.
+ * @param {object} caddyConfig
+ * @returns {Array<{ domain: string, type: string, target: string, server: string }>}
+ */
+export function listSubdomainDetails(caddyConfig) {
+  const domains = listSubdomains(caddyConfig);
+  return domains.map((domain) => {
+    const entry = getSubdomainEntry(caddyConfig, domain);
+    return {
+      domain,
+      type: entry?.type || "custom",
+      target: entry?.target || "unspecified",
+      server: entry?.server || "srv0"
+    };
+  });
+}
+
+/**
  * Build a Level-1 Smoke Test Probe route block using native static_response.
  * Requires ZERO external ports, ZERO files on disk, and ZERO Node.js processes.
  * Used to verify DNS propagation and automatic HTTPS issuance.

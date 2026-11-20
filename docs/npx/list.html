@@ -76,9 +76,9 @@
       <div class="bg-zinc-950 border border-zinc-800/80 rounded-lg p-4 font-mono text-xs text-zinc-200 space-y-1.5">
         <div><span class="text-zinc-500">Config: </span><span class="text-zinc-400">/etc/caddy/caddy.json</span></div>
         <div class="text-blue-300 font-semibold mt-2">Subdomains (3):</div>
-        <div class="pl-3 text-zinc-300">1. quotation.keshavsoft.com</div>
-        <div class="pl-3 text-zinc-300">2. call.keshavsoft.com</div>
-        <div class="pl-3 text-zinc-300">3. appointment.keshavsoft.com</div>
+        <div class="pl-3 text-zinc-300">1. quotation.keshavsoft.com     ➔ localhost:3000       [reverse_proxy]</div>
+        <div class="pl-3 text-zinc-300">2. call.keshavsoft.com          ➔ static_response      [probe]</div>
+        <div class="pl-3 text-zinc-300">3. appointment.keshavsoft.com   ➔ localhost:4000       [reverse_proxy]</div>
       </div>
     </div>
 
