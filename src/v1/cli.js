@@ -11,7 +11,7 @@ import {
   addProbeSubdomainToFile
 } from "./index.js";
 
-const VERSION = "1.1.2";
+const VERSION = "1.1.3";
 
 /**
  * Automatically discovers the Caddy configuration file:
