@@ -38,9 +38,9 @@ When creating a new subdomain (e.g. on GoDaddy, Cloudflare, or Namecheap), tryin
 ```mermaid
 flowchart TD
     DNS["1. GoDaddy / DNS Provider<br>Add A Record: call ➔ 103.174.102.116"] 
-    DNS --> Probe["2. Level 1: Caddy Probe<br>npx caddy-subdomain probe call.keshavsoft.com --reload"]
+    DNS --> Probe["2. Level 1: Caddy Probe<br>npx caddy-subdomain probe call.keshavsoft.com"]
     Probe --> Verify{"3. Visit https://call.keshavsoft.com"}
-    Verify -->|Green Padlock + 200 OK| Promoted["4. Level 2: Promote to Node.js<br>npx caddy-subdomain add call.keshavsoft.com 5000 --force --reload"]
+    Verify -->|Green Padlock + 200 OK| Promoted["4. Level 2: Promote to Node.js<br>npx caddy-subdomain add call.keshavsoft.com 5000"]
     Verify -->|Connection Error| FixDNS["Fix DNS propagation or Port 443 firewall<br>(Node app wasn't even touched!)"]
 ```
 
@@ -50,14 +50,20 @@ flowchart TD
 Before starting Node.js or allocating ports, verify that **DNS points to your server** and that **Caddy's Automatic HTTPS issued an SSL certificate**:
 
 ```bash
-npx caddy-subdomain probe call.keshavsoft.com /etc/caddy/caddy.json --reload
+npx caddy-subdomain probe call.keshavsoft.com
 ```
 
 **How it works under the hood:**
-- Injects a native Caddy `static_response` handler (HTTP 200 OK).
-- Requires **zero open ports, zero files on disk, and zero backend processes**.
-- Caddy automatically contacts Let's Encrypt / ZeroSSL to generate your TLS certificate.
-- Open `https://call.keshavsoft.com` in your browser. When you see the **Green Padlock** and confirmation message, your network pipe and SSL are 100% verified.
+- **Zero Config Passing:** Automatically discovers `/etc/caddy/caddy.json` on your VPS or `./caddy.json` locally.
+- **Automatic Reload:** Executes hot-reload automatically without needing flags.
+- **Zero Port/Process Overhead:** Injects a native Caddy `static_response` handler (HTTP 200 OK).
+- **Direct Terminal Feedback:**
+  ```text
+  Subdomain:        call.keshavsoft.com
+  Present in Caddy: Yes (Probe Active)
+  Caddy Reload:     Success
+  Live HTTPS:       Yes (200 OK - Verified)
+  ```
 
 ---
 
@@ -65,10 +71,11 @@ npx caddy-subdomain probe call.keshavsoft.com /etc/caddy/caddy.json --reload
 Now that the domain and SSL certificate are proven live, promote the subdomain to your actual application:
 
 ```bash
-npx caddy-subdomain add call.keshavsoft.com 5000 /etc/caddy/caddy.json --force --reload
+npx caddy-subdomain add call.keshavsoft.com 5000
 ```
 
 - Replaces the probe with a clean `reverse_proxy` pointing to `localhost:5000`.
+- Automatically executes hot-reload in memory.
 - Retains existing TLS certificates—zero re-negotiation downtime!
 
 ---
@@ -76,26 +83,27 @@ npx caddy-subdomain add call.keshavsoft.com 5000 /etc/caddy/caddy.json --force -
 ## 🌐 Interactive Documentation Portal
 
 Explore live examples, visual flowcharts, and the interactive command builder:  
-👉 **[https://keshavsoft.github.io/caddy-subdomain/](https://keshavsoft.github.io/caddy-subdomain/)**
+👉 **[https://keshavsoft.github.io/caddy-subdomain/](https://keshavsoft.github.io/caddy-subdomain/)**  
+👉 Dedicated NPX Command Catalog: **[https://keshavsoft.github.io/caddy-subdomain/npx/](https://keshavsoft.github.io/caddy-subdomain/npx/)**
 
 ---
 
 ## 🚀 Quick Start with `npx`
 
-Zero installation required. Run directly in any environment with Node.js installed:
+Zero installation and zero path configuration required:
 
 ```bash
-# 1. Probe a new domain (Level 1 Flight Check)
-npx caddy-subdomain probe call.keshavsoft.com --reload
+# 1. Probe a new domain (Level 1 Flight Check: auto-detects config & auto-reloads)
+npx caddy-subdomain probe call.keshavsoft.com
 
 # 2. Add or promote to a Node / Python / Go backend port
-npx caddy-subdomain add call.keshavsoft.com 5000 --force --reload
+npx caddy-subdomain add call.keshavsoft.com 5000
 
-# 3. List all configured subdomains
-npx caddy-subdomain list
-
-# 4. Check if a domain already exists in Caddy
+# 3. Check if a domain already exists in Caddy (Instant Yes / No answer)
 npx caddy-subdomain check call.keshavsoft.com
+
+# 4. List all configured subdomains
+npx caddy-subdomain list
 ```
 
 ---
@@ -103,80 +111,76 @@ npx caddy-subdomain check call.keshavsoft.com
 ## ⚙️ CLI Command Reference
 
 ### Default Config Resolution
-If no file path is specified, `caddy-subdomain` automatically checks:
-1. `./caddy.json` in current directory.
-2. `/etc/caddy/caddy.json` (standard Linux/VPS path).
+`caddy-subdomain` automatically checks in priority order:
+1. `/etc/caddy/caddy.json` (standard Linux/VPS path).
+2. `./caddy.json` in current directory.
+3. Sibling/parent configuration files.
 
 ---
 
 ### 1. `caddy-subdomain probe <domain>`
-Injects a Level-1 test probe route returning a `200 OK` text response.
+Injects a Level-1 test probe route, auto-reloads Caddy, and probes live HTTPS:
 
 ```bash
-npx caddy-subdomain probe <domain> [configPath] [options]
+npx caddy-subdomain probe call.keshavsoft.com
 ```
 
-**Options:**
-- `--reload`: Immediately triggers `caddy reload --config <file>`.
-- `--force`: Overwrites any existing route for this domain.
-- `--no-backup`: Skips creating a `.bak.<timestamp>` file.
-
-**Example:**
-```bash
-npx caddy-subdomain probe billing.keshavsoft.com /etc/caddy/caddy.json --reload
+**Terminal Output:**
+```text
+Subdomain:        call.keshavsoft.com
+Present in Caddy: Yes (Probe Active)
+Caddy Reload:     Success
+Live HTTPS:       Yes (200 OK - Verified)
 ```
 
 ---
 
 ### 2. `caddy-subdomain add <domain> <port>`
-Appends or updates a reverse proxy route forwarding traffic to your backend target.
+Appends or updates a reverse proxy route forwarding traffic to your backend target:
 
 ```bash
-npx caddy-subdomain add <domain> <port> [configPath] [options]
+npx caddy-subdomain add call.keshavsoft.com 5000
 ```
 
-**Options:**
-- `--reload`: Hot-reloads Caddy server immediately after writing.
-- `--force`: Replaces an existing domain entry (useful when promoting a probe).
-- `--no-backup`: Disables automatic backup creation.
-
-**Example:**
-```bash
-npx caddy-subdomain add billing.keshavsoft.com 5000 /etc/caddy/caddy.json --force --reload
+**Terminal Output:**
+```text
+Subdomain:        call.keshavsoft.com
+Target:           localhost:5000
+Caddy Reload:     Success
+Status:           Active
 ```
 
 ---
 
-### 3. `caddy-subdomain list [configPath]`
-Prints an indexed list of every unique subdomain registered across all HTTP servers in your Caddy configuration.
+### 3. `caddy-subdomain check <domain>`
+Direct presence check. Returns a clean binary **Yes** or **No**:
 
 ```bash
-npx caddy-subdomain list /etc/caddy/caddy.json
+npx caddy-subdomain check call.keshavsoft.com
 ```
 
-**Sample Output:**
+**Terminal Output:**
 ```text
-Configured Subdomains in /etc/caddy/caddy.json (5):
+Subdomain:        call.keshavsoft.com
+Present in Caddy: Yes
+```
 
+---
+
+### 4. `caddy-subdomain list`
+Prints an indexed list of every unique subdomain registered in Caddy:
+
+```bash
+npx caddy-subdomain list
+```
+
+**Terminal Output:**
+```text
+Config: /etc/caddy/caddy.json
+Subdomains (3):
   1. quotation.keshavsoft.com
-  2. washtex5.keshavsoft.com
-  3. cli.keshavsoft.com
-  4. cc9.keshavsoft.com
-  5. call.keshavsoft.com
-```
-
----
-
-### 4. `caddy-subdomain check <domain> [configPath]`
-Validates whether a domain is already registered before modifying configurations.
-
-```bash
-npx caddy-subdomain check quotation.keshavsoft.com
-```
-
-**Sample Output:**
-```text
-❌ Domain 'quotation.keshavsoft.com' is ALREADY configured in /etc/caddy/caddy.json
+  2. call.keshavsoft.com
+  3. appointment.keshavsoft.com
 ```
 
 ---

@@ -23,8 +23,12 @@
         <span class="font-bold text-sm tracking-wider uppercase text-emerald-400 font-mono">probe</span>
       </div>
       <div class="flex items-center gap-2 text-xs font-mono">
+        <a href="check.html" class="text-zinc-400 hover:text-amber-300 transition flex items-center gap-1">
+          <span>check</span>
+        </a>
+        <span class="text-zinc-700">&bull;</span>
         <a href="add.html" class="text-zinc-400 hover:text-amber-300 transition flex items-center gap-1">
-          <span>Next: add</span>
+          <span>add</span>
           <i class="bi bi-chevron-right text-[10px]"></i>
         </a>
       </div>
@@ -37,21 +41,27 @@
     <!-- Header Badge -->
     <div class="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 px-3 py-1 rounded-full text-xs font-mono font-semibold mb-4">
       <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-      <span>Level 1 Flight Check &bull; Zero Dependencies</span>
+      <span>100% Automatic &bull; Zero Configuration Required</span>
     </div>
 
     <h1 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight mb-3">
       npx caddy-subdomain probe
     </h1>
     <p class="text-zinc-400 text-sm sm:text-base mb-8 leading-relaxed">
-      Test DNS propagation and auto-provision your Let's Encrypt / ZeroSSL certificate <strong>without starting Node.js or allocating backend ports</strong>.
+      One single command to verify GoDaddy DNS propagation and auto-provision Let's Encrypt / ZeroSSL HTTPS. <strong>Auto-detects Caddy config, auto-reloads, and gives an instant Yes/No status.</strong>
     </p>
 
     <!-- The Command Box -->
-    <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 sm:p-5 mb-10 shadow-xl">
-      <div class="text-xs text-zinc-400 uppercase font-mono tracking-wider mb-2">Live Production Syntax:</div>
+    <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 sm:p-5 mb-8 shadow-xl">
+      <div class="flex items-center justify-between text-xs text-zinc-400 uppercase font-mono tracking-wider mb-2">
+        <span>Simple NPX Command:</span>
+        <span class="text-emerald-400 lowercase font-normal flex items-center gap-1">
+          <i class="bi bi-check-circle-fill text-[11px]"></i>
+          auto-detects /etc/caddy/caddy.json &amp; auto-reloads
+        </span>
+      </div>
       <div class="flex items-center justify-between gap-3 bg-zinc-950 p-3.5 rounded-lg border border-zinc-800 font-mono text-xs sm:text-sm text-emerald-300">
-        <code id="cmd-probe" class="truncate select-all">npx caddy-subdomain probe call.keshavsoft.com /etc/caddy/caddy.json --reload</code>
+        <code id="cmd-probe" class="truncate select-all">npx caddy-subdomain probe call.keshavsoft.com</code>
         <button onclick="copyCmd('cmd-probe', this)" class="shrink-0 bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 border border-emerald-500/30 px-3 py-1.5 rounded-lg text-xs font-sans font-semibold transition flex items-center gap-1">
           <i class="bi bi-clipboard"></i>
           <span>Copy</span>
@@ -59,23 +69,58 @@
       </div>
     </div>
 
+    <!-- Direct Output Box: What Returns in Terminal -->
+    <div class="bg-zinc-900/60 border border-zinc-800 rounded-xl p-5 mb-10">
+      <div class="text-xs font-mono font-semibold text-zinc-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+        <i class="bi bi-terminal text-amber-400"></i>
+        <span>Instant Yes / No Terminal Response</span>
+      </div>
+      <div class="bg-zinc-950 border border-zinc-800/80 rounded-lg p-4 font-mono text-xs text-zinc-200 space-y-1.5">
+        <div><span class="text-zinc-500">Subdomain:        </span><span class="text-amber-300 font-semibold">call.keshavsoft.com</span></div>
+        <div><span class="text-zinc-500">Present in Caddy: </span><span class="text-emerald-400 font-semibold">Yes (Probe Active)</span></div>
+        <div><span class="text-zinc-500">Caddy Reload:     </span><span class="text-emerald-400 font-semibold">Success</span></div>
+        <div><span class="text-zinc-500">Live HTTPS:       </span><span class="text-emerald-400 font-semibold">Yes (200 OK - Verified)</span></div>
+      </div>
+    </div>
+
     <!-- The Story / Narrative -->
     <section class="mb-12">
       <h2 class="text-lg font-bold text-white uppercase tracking-wider mb-4 border-b border-zinc-800 pb-2 flex items-center gap-2">
-        <i class="bi bi-book text-amber-400"></i>
-        <span>The Problem &amp; Story</span>
+        <i class="bi bi-magic text-amber-400"></i>
+        <span>Why It's 100% Automatic</span>
       </h2>
       <div class="text-xs sm:text-sm text-zinc-300 space-y-4 leading-relaxed">
-        <p>
-          Whenever you configure a new subdomain (e.g. creating an <code class="text-amber-300">A</code> record on GoDaddy pointing to your server IP), your immediate instinct is often to start your Node.js application, configure PM2, and map reverse proxy ports.
-        </p>
-        <p>
-          <strong>The Problem:</strong> When you open the browser and it fails to load, you're left guessing:
-          <em class="text-zinc-400">Did DNS propagate? Is port 443 blocked by a firewall? Did Caddy fail to issue the SSL certificate? Or did the Node.js process crash?</em>
-        </p>
-        <p class="bg-emerald-950/40 border border-emerald-800/60 p-4 rounded-xl text-emerald-200">
-          <strong>The Solution:</strong> Run <code class="text-white font-mono font-bold">probe</code> first! It injects Caddy's native <code class="text-amber-300 font-mono">static_response</code> handler. When you open <code class="text-white font-mono">https://your-domain.com</code> and see the <strong>Green Padlock</strong> with a 200 OK message, you have <strong>100% mathematical proof</strong> that DNS, firewall, and SSL are working.
-        </p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="bg-zinc-900/50 border border-zinc-800 p-4 rounded-xl">
+            <div class="text-amber-400 font-bold font-mono text-sm mb-1 flex items-center gap-1.5">
+              <i class="bi bi-file-earmark-code"></i>
+              <span>Auto-Config</span>
+            </div>
+            <p class="text-xs text-zinc-400">
+              You never pass file paths from outside. It automatically discovers <code class="text-zinc-200">/etc/caddy/caddy.json</code> on your VPS or <code class="text-zinc-200">./caddy.json</code> locally.
+            </p>
+          </div>
+
+          <div class="bg-zinc-900/50 border border-zinc-800 p-4 rounded-xl">
+            <div class="text-emerald-400 font-bold font-mono text-sm mb-1 flex items-center gap-1.5">
+              <i class="bi bi-arrow-repeat"></i>
+              <span>Auto-Reload</span>
+            </div>
+            <p class="text-xs text-zinc-400">
+              No <code class="text-zinc-200">--reload</code> flag required. It hot-reloads Caddy in memory with zero downtime and preserves existing TLS connections.
+            </p>
+          </div>
+
+          <div class="bg-zinc-900/50 border border-zinc-800 p-4 rounded-xl">
+            <div class="text-cyan-400 font-bold font-mono text-sm mb-1 flex items-center gap-1.5">
+              <i class="bi bi-check2-circle"></i>
+              <span>Yes / No Verdict</span>
+            </div>
+            <p class="text-xs text-zinc-400">
+              Immediately tells you if the domain is present in Caddy and whether live HTTPS traffic reaches the server.
+            </p>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -83,9 +128,9 @@
     <section class="mb-12">
       <h2 class="text-lg font-bold text-white uppercase tracking-wider mb-4 border-b border-zinc-800 pb-2 flex items-center gap-2">
         <i class="bi bi-cpu text-amber-400"></i>
-        <span>Under The Hood: Generated Caddy JSON</span>
+        <span>Under The Hood: Injected Static Response</span>
       </h2>
-      <p class="text-xs text-zinc-400 mb-3">Notice that this route requires zero open ports and zero files on disk:</p>
+      <p class="text-xs text-zinc-400 mb-3">Zero ports and zero processes needed. Caddy responds natively with 200 OK and auto-issues certificates:</p>
       <div class="bg-zinc-950 border border-zinc-800 rounded-xl p-4 font-mono text-xs text-zinc-300 overflow-x-auto">
 <pre>{
   <span class="text-amber-400">"match"</span>: [{ <span class="text-emerald-400">"host"</span>: [<span class="text-emerald-300">"call.keshavsoft.com"</span>] }],
@@ -102,69 +147,66 @@
       </div>
     </section>
 
-    <!-- Flags and Options -->
+    <!-- Optional Overrides -->
     <section class="mb-12">
       <h2 class="text-lg font-bold text-white uppercase tracking-wider mb-4 border-b border-zinc-800 pb-2 flex items-center gap-2">
-        <i class="bi bi-flag text-amber-400"></i>
-        <span>Supported Options &amp; Flags</span>
+        <i class="bi bi-sliders text-amber-400"></i>
+        <span>Optional Flags (Only if needed)</span>
       </h2>
       <div class="border border-zinc-800 rounded-xl overflow-hidden text-xs">
         <table class="w-full text-left border-collapse">
           <thead>
             <tr class="bg-zinc-900 border-b border-zinc-800 text-zinc-400 font-mono">
               <th class="py-3 px-4">Flag</th>
-              <th class="py-3 px-4">Type</th>
+              <th class="py-3 px-4">Default</th>
               <th class="py-3 px-4">Description</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-zinc-800/80 font-mono text-zinc-300">
             <tr>
-              <td class="py-3 px-4 font-bold text-amber-400">--reload</td>
-              <td class="py-3 px-4 text-zinc-500">Boolean</td>
-              <td class="py-3 px-4 font-sans text-zinc-300">Triggers <code class="text-amber-300 font-mono">caddy reload --config &lt;file&gt;</code> immediately after writing.</td>
+              <td class="py-3 px-4 text-amber-300">--no-reload</td>
+              <td class="py-3 px-4 text-zinc-500">false</td>
+              <td class="py-3 px-4 text-zinc-400">Skip automatic Caddy reload</td>
             </tr>
             <tr>
-              <td class="py-3 px-4 font-bold text-amber-400">--force</td>
-              <td class="py-3 px-4 text-zinc-500">Boolean</td>
-              <td class="py-3 px-4 font-sans text-zinc-300">Bypasses duplicate domain check and replaces existing configuration.</td>
+              <td class="py-3 px-4 text-amber-300">--no-backup</td>
+              <td class="py-3 px-4 text-zinc-500">false</td>
+              <td class="py-3 px-4 text-zinc-400">Skip automatic timestamped backup file</td>
             </tr>
             <tr>
-              <td class="py-3 px-4 font-bold text-amber-400">--no-backup</td>
-              <td class="py-3 px-4 text-zinc-500">Boolean</td>
-              <td class="py-3 px-4 font-sans text-zinc-300">Skips creating the timestamped <code class="text-zinc-400 font-mono">.bak.&lt;timestamp&gt;</code> file.</td>
+              <td class="py-3 px-4 text-amber-300">--force</td>
+              <td class="py-3 px-4 text-zinc-500">false</td>
+              <td class="py-3 px-4 text-zinc-400">Overwrite route if domain is already present</td>
             </tr>
           </tbody>
         </table>
       </div>
     </section>
 
-    <!-- Next Step Callout -->
-    <div class="bg-zinc-900 border border-amber-500/30 rounded-xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-      <div>
-        <h3 class="font-bold text-white text-base">DNS &amp; HTTPS Verified?</h3>
-        <p class="text-xs text-zinc-400 mt-0.5">Now that the pipe is proven, promote your domain to your Node.js backend port.</p>
-      </div>
-      <a href="add.html" class="shrink-0 bg-amber-400 hover:bg-amber-300 text-black font-semibold text-xs px-4 py-2 rounded-lg transition flex items-center gap-1.5 font-mono">
-        <span>Go to add command</span>
+    <!-- Navigation footer -->
+    <div class="flex items-center justify-between border-t border-zinc-800 pt-6 text-xs font-mono">
+      <a href="check.html" class="text-zinc-400 hover:text-white flex items-center gap-2">
+        <i class="bi bi-arrow-left"></i>
+        <span>Back to check</span>
+      </a>
+      <a href="add.html" class="bg-amber-500/20 text-amber-300 border border-amber-500/30 px-3 py-1.5 rounded-lg hover:bg-amber-500/30 transition flex items-center gap-2">
+        <span>Level 2: Backend Promotion (add)</span>
         <i class="bi bi-arrow-right"></i>
       </a>
     </div>
 
   </main>
 
-  <footer class="w-full border-t border-zinc-800/80 py-6 text-center text-xs text-zinc-500">
-    <p>&copy; KeshavSoft &bull; ISC License &bull; <a href="index.html" class="text-amber-400 hover:underline">NPX Hub</a></p>
-  </footer>
-
   <script>
     function copyCmd(id, btn) {
-      const text = document.getElementById(id).textContent;
-      navigator.clipboard.writeText(text).then(() => {
+      const code = document.getElementById(id).innerText;
+      navigator.clipboard.writeText(code).then(() => {
         const orig = btn.innerHTML;
-        btn.innerHTML = '<i class="bi bi-check2 text-emerald-400"></i><span class="text-emerald-400">Copied!</span>';
-        setTimeout(() => { btn.innerHTML = orig; }, 1500);
+        btn.innerHTML = '<i class="bi bi-check-lg text-emerald-400"></i> Copied!';
+        setTimeout(() => btn.innerHTML = orig, 2000);
       });
     }
   </script>
 </body>
+
 </html>

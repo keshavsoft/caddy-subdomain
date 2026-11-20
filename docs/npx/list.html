@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>npx caddy-subdomain list — Subdomain Inventory</title>
+  <title>npx caddy-subdomain list — Inspect Configured Subdomains</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 </head>
@@ -20,12 +20,15 @@
           <span>NPX Hub</span>
         </a>
         <span class="text-zinc-700">/</span>
-        <span class="font-bold text-sm tracking-wider uppercase text-sky-400 font-mono">list</span>
+        <span class="font-bold text-sm tracking-wider uppercase text-blue-400 font-mono">list</span>
       </div>
       <div class="flex items-center gap-2 text-xs font-mono">
+        <a href="add.html" class="text-zinc-400 hover:text-amber-300 transition flex items-center gap-1">
+          <span>add</span>
+        </a>
+        <span class="text-zinc-700">&bull;</span>
         <a href="check.html" class="text-zinc-400 hover:text-amber-300 transition flex items-center gap-1">
-          <span>Next: check</span>
-          <i class="bi bi-chevron-right text-[10px]"></i>
+          <span>check</span>
         </a>
       </div>
     </div>
@@ -35,100 +38,74 @@
   <main class="flex-1 max-w-4xl mx-auto px-4 sm:px-6 py-12">
 
     <!-- Header Badge -->
-    <div class="inline-flex items-center gap-2 bg-sky-500/10 border border-sky-500/30 text-sky-400 px-3 py-1 rounded-full text-xs font-mono font-semibold mb-4">
-      <span>Observability &bull; Subdomain Inventory</span>
+    <div class="inline-flex items-center gap-2 bg-blue-500/10 border border-blue-500/30 text-blue-400 px-3 py-1 rounded-full text-xs font-mono font-semibold mb-4">
+      <span>Auto-Discovery &bull; Zero Configuration</span>
     </div>
 
     <h1 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight mb-3">
       npx caddy-subdomain list
     </h1>
     <p class="text-zinc-400 text-sm sm:text-base mb-8 leading-relaxed">
-      Print an indexed inventory of every unique subdomain configured across all HTTP servers in your Caddy JSON without manually reading through hundreds of nested lines.
+      Inspect all active subdomains and hostnames configured inside Caddy JSON. <strong>Automatically locates your Caddy config.</strong>
     </p>
 
     <!-- The Command Box -->
-    <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 sm:p-5 mb-10 shadow-xl">
-      <div class="text-xs text-zinc-400 uppercase font-mono tracking-wider mb-2">Live Production Syntax:</div>
-      <div class="flex items-center justify-between gap-3 bg-zinc-950 p-3.5 rounded-lg border border-zinc-800 font-mono text-xs sm:text-sm text-sky-300">
-        <code id="cmd-list" class="truncate select-all">npx caddy-subdomain list /etc/caddy/caddy.json</code>
-        <button onclick="copyCmd('cmd-list', this)" class="shrink-0 bg-sky-500/20 text-sky-300 hover:bg-sky-500/30 border border-sky-500/30 px-3 py-1.5 rounded-lg text-xs font-sans font-semibold transition flex items-center gap-1">
+    <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 sm:p-5 mb-8 shadow-xl">
+      <div class="flex items-center justify-between text-xs text-zinc-400 uppercase font-mono tracking-wider mb-2">
+        <span>Simple NPX Command:</span>
+        <span class="text-blue-400 lowercase font-normal flex items-center gap-1">
+          <i class="bi bi-check-circle-fill text-[11px]"></i>
+          auto-detects /etc/caddy/caddy.json
+        </span>
+      </div>
+      <div class="flex items-center justify-between gap-3 bg-zinc-950 p-3.5 rounded-lg border border-zinc-800 font-mono text-xs sm:text-sm text-blue-300">
+        <code id="cmd-list" class="truncate select-all">npx caddy-subdomain list</code>
+        <button onclick="copyCmd('cmd-list', this)" class="shrink-0 bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 border border-blue-500/30 px-3 py-1.5 rounded-lg text-xs font-sans font-semibold transition flex items-center gap-1">
           <i class="bi bi-clipboard"></i>
           <span>Copy</span>
         </button>
       </div>
     </div>
 
-    <!-- The Story / Narrative -->
-    <section class="mb-12">
-      <h2 class="text-lg font-bold text-white uppercase tracking-wider mb-4 border-b border-zinc-800 pb-2 flex items-center gap-2">
-        <i class="bi bi-book text-amber-400"></i>
-        <span>The Problem &amp; Story</span>
-      </h2>
-      <div class="text-xs sm:text-sm text-zinc-300 space-y-4 leading-relaxed">
-        <p>
-          On a production VPS running multiple microservices, Caddy's configuration file grows rapidly into hundreds or thousands of lines of nested JSON:
-          <code class="text-zinc-400 font-mono">apps ➔ http ➔ servers ➔ srv0 ➔ routes ➔ match ➔ host</code>.
-        </p>
-        <p>
-          Finding out which domains are currently active or verifying that a newly added subdomain successfully registered can be tedious.
-        </p>
-        <p class="bg-sky-950/40 border border-sky-800/60 p-4 rounded-xl text-sky-200">
-          <strong>The Solution:</strong> Run <code class="text-white font-mono font-bold">list</code>! It inspects all HTTP servers, deduplicates hostnames, and outputs a clean, indexed summary in under 50ms.
-        </p>
-      </div>
-    </section>
-
-    <!-- Real Terminal Output -->
-    <section class="mb-12">
-      <h2 class="text-lg font-bold text-white uppercase tracking-wider mb-4 border-b border-zinc-800 pb-2 flex items-center gap-2">
+    <!-- Direct Output Box: What Returns in Terminal -->
+    <div class="bg-zinc-900/60 border border-zinc-800 rounded-xl p-5 mb-10">
+      <div class="text-xs font-mono font-semibold text-zinc-400 uppercase tracking-wider mb-3 flex items-center gap-2">
         <i class="bi bi-terminal text-amber-400"></i>
-        <span>Real Terminal Output</span>
-      </h2>
-      <div class="bg-zinc-950 border border-zinc-800 rounded-xl p-4 font-mono text-xs text-zinc-300">
-        <div class="text-zinc-500 mb-2">$ npx caddy-subdomain list /etc/caddy/caddy.json</div>
-        <div class="text-zinc-200">Configured Subdomains in /etc/caddy/caddy.json (10):</div>
-        <div class="text-amber-300 mt-2 space-y-1">
-          <div>  1. quotation.keshavsoft.com</div>
-          <div>  2. washtex5.keshavsoft.com</div>
-          <div>  3. mani3.keshavsoft.com</div>
-          <div>  4. lab14.keshavsoft.com</div>
-          <div>  5. rk2.keshavsoft.com</div>
-          <div>  6. keshavsoft.com</div>
-          <div>  7. www.keshavsoft.com</div>
-          <div>  8. cli.keshavsoft.com</div>
-          <div>  9. cc9.keshavsoft.com</div>
-          <div>  10. call.keshavsoft.com</div>
-        </div>
+        <span>Instant Terminal Response</span>
       </div>
-    </section>
+      <div class="bg-zinc-950 border border-zinc-800/80 rounded-lg p-4 font-mono text-xs text-zinc-200 space-y-1.5">
+        <div><span class="text-zinc-500">Config: </span><span class="text-zinc-400">/etc/caddy/caddy.json</span></div>
+        <div class="text-blue-300 font-semibold mt-2">Subdomains (3):</div>
+        <div class="pl-3 text-zinc-300">1. quotation.keshavsoft.com</div>
+        <div class="pl-3 text-zinc-300">2. call.keshavsoft.com</div>
+        <div class="pl-3 text-zinc-300">3. appointment.keshavsoft.com</div>
+      </div>
+    </div>
 
-    <!-- Next Step Callout -->
-    <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-      <div>
-        <h3 class="font-bold text-white text-base">Want to check domain availability?</h3>
-        <p class="text-xs text-zinc-400 mt-0.5">Use <code class="text-purple-300 font-mono">check</code> to verify if a single subdomain is available before creating it.</p>
-      </div>
-      <a href="check.html" class="shrink-0 bg-zinc-800 hover:bg-zinc-700 text-white font-semibold text-xs px-4 py-2 rounded-lg transition flex items-center gap-1.5 font-mono">
-        <span>Go to check command</span>
+    <!-- Navigation footer -->
+    <div class="flex items-center justify-between border-t border-zinc-800 pt-6 text-xs font-mono">
+      <a href="index.html" class="text-zinc-400 hover:text-white flex items-center gap-2">
+        <i class="bi bi-arrow-left"></i>
+        <span>Back to NPX Hub</span>
+      </a>
+      <a href="check.html" class="bg-purple-500/20 text-purple-300 border border-purple-500/30 px-3 py-1.5 rounded-lg hover:bg-purple-500/30 transition flex items-center gap-2">
+        <span>Next: check</span>
         <i class="bi bi-arrow-right"></i>
       </a>
     </div>
 
   </main>
 
-  <footer class="w-full border-t border-zinc-800/80 py-6 text-center text-xs text-zinc-500">
-    <p>&copy; KeshavSoft &bull; ISC License &bull; <a href="index.html" class="text-amber-400 hover:underline">NPX Hub</a></p>
-  </footer>
-
   <script>
     function copyCmd(id, btn) {
-      const text = document.getElementById(id).textContent;
-      navigator.clipboard.writeText(text).then(() => {
+      const code = document.getElementById(id).innerText;
+      navigator.clipboard.writeText(code).then(() => {
         const orig = btn.innerHTML;
-        btn.innerHTML = '<i class="bi bi-check2 text-emerald-400"></i><span class="text-emerald-400">Copied!</span>';
-        setTimeout(() => { btn.innerHTML = orig; }, 1500);
+        btn.innerHTML = '<i class="bi bi-check-lg text-blue-400"></i> Copied!';
+        setTimeout(() => btn.innerHTML = orig, 2000);
       });
     }
   </script>
 </body>
+
 </html>

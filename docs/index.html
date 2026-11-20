@@ -91,7 +91,7 @@
         <span class="text-emerald-400 font-semibold">Ready via npx</span>
       </div>
       <div class="flex items-center justify-between gap-3 bg-zinc-950 px-3.5 py-2.5 rounded-lg border border-zinc-800/80 font-mono text-xs sm:text-sm text-zinc-200">
-        <code id="hero-cmd" class="truncate select-all">npx caddy-subdomain probe call.keshavsoft.com --reload</code>
+        <code id="hero-cmd" class="truncate select-all">npx caddy-subdomain probe call.keshavsoft.com</code>
         <button onclick="copySnippet('hero-cmd', this)" class="shrink-0 text-zinc-400 hover:text-amber-400 transition" title="Copy command">
           <i class="bi bi-clipboard text-base"></i>
         </button>
@@ -148,7 +148,7 @@
             </p>
             <div class="bg-zinc-950 p-3 rounded-lg border border-zinc-800 text-xs font-mono text-zinc-300 space-y-1">
               <div class="text-zinc-500"># Promote to Node app:</div>
-              <div class="text-amber-300">npx caddy-subdomain add call.keshavsoft.com 5000 --force --reload</div>
+              <div class="text-amber-300">npx caddy-subdomain add call.keshavsoft.com 5000</div>
             </div>
           </div>
           <div class="mt-4 pt-3 border-t border-zinc-800/80 flex items-center gap-2 text-xs text-amber-400">
@@ -204,26 +204,26 @@
 
           <!-- Config Path -->
           <div>
-            <label class="block text-xs font-semibold text-zinc-300 mb-1.5">Caddy JSON Path <span class="text-zinc-500 font-normal">(Optional)</span></label>
-            <input type="text" id="gen-path" value="/etc/caddy/caddy.json" oninput="updateCommand()"
+            <label class="block text-xs font-semibold text-zinc-300 mb-1.5">Caddy JSON Path <span class="text-zinc-500 font-normal">(Optional Override)</span></label>
+            <input type="text" id="gen-path" value="" oninput="updateCommand()"
               class="w-full bg-zinc-950 border border-zinc-700/80 text-zinc-200 text-xs sm:text-sm rounded-lg px-3 py-2 font-mono focus:outline-none focus:border-amber-400"
-              placeholder="Defaults to ./caddy.json or /etc/caddy/caddy.json">
+              placeholder="Auto-detected (/etc/caddy/caddy.json or ./caddy.json)">
           </div>
         </div>
 
         <!-- Options checkboxes -->
         <div id="field-flags" class="flex flex-wrap gap-4 text-xs font-medium text-zinc-300 border-t border-zinc-800 pt-4 mb-6">
           <label class="flex items-center gap-2 cursor-pointer select-none">
-            <input type="checkbox" id="flag-reload" checked onchange="updateCommand()" class="accent-amber-400 rounded">
-            <span>--reload (Trigger hot-reload immediately)</span>
+            <input type="checkbox" id="flag-noreload" onchange="updateCommand()" class="accent-amber-400 rounded">
+            <span>--no-reload (Skip automatic reload)</span>
           </label>
           <label class="flex items-center gap-2 cursor-pointer select-none">
             <input type="checkbox" id="flag-force" onchange="updateCommand()" class="accent-amber-400 rounded">
-            <span>--force (Overwrite existing route)</span>
+            <span>--force (Force overwrite)</span>
           </label>
           <label class="flex items-center gap-2 cursor-pointer select-none">
             <input type="checkbox" id="flag-nobackup" onchange="updateCommand()" class="accent-amber-400 rounded">
-            <span>--no-backup (Skip .bak file creation)</span>
+            <span>--no-backup (Skip backup file)</span>
           </label>
         </div>
 
@@ -231,7 +231,7 @@
         <div>
           <label class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">Generated NPX Command</label>
           <div class="flex items-center justify-between gap-3 bg-zinc-950 p-4 rounded-xl border border-zinc-800 font-mono text-xs sm:text-sm text-amber-300">
-            <code id="gen-output" class="truncate select-all">npx caddy-subdomain probe call.keshavsoft.com /etc/caddy/caddy.json --reload</code>
+            <code id="gen-output" class="truncate select-all">npx caddy-subdomain probe call.keshavsoft.com</code>
             <button onclick="copySnippet('gen-output', this)" class="shrink-0 bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 border border-amber-500/30 px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 font-sans font-semibold text-xs">
               <i class="bi bi-clipboard"></i>
               <span>Copy</span>
@@ -299,7 +299,7 @@ console.log(<span class="text-emerald-400">`Subdomain live at route index: ${liv
       const domain = document.getElementById('gen-domain').value.trim();
       const port = document.getElementById('gen-port').value.trim();
       const path = document.getElementById('gen-path').value.trim();
-      const reload = document.getElementById('flag-reload').checked;
+      const noreload = document.getElementById('flag-noreload').checked;
       const force = document.getElementById('flag-force').checked;
       const nobackup = document.getElementById('flag-nobackup').checked;
 
@@ -335,16 +335,14 @@ console.log(<span class="text-emerald-400">`Subdomain live at route index: ${liv
         parts.push(port);
       }
 
-      if (path && path !== '/etc/caddy/caddy.json') {
+      if (path) {
         parts.push(path);
-      } else if (path === '/etc/caddy/caddy.json') {
-        parts.push('/etc/caddy/caddy.json');
       }
 
       if (action === 'probe' || action === 'add') {
         if (force) parts.push('--force');
         if (nobackup) parts.push('--no-backup');
-        if (reload) parts.push('--reload');
+        if (noreload) parts.push('--no-reload');
       }
 
       document.getElementById('gen-output').textContent = parts.join(' ');

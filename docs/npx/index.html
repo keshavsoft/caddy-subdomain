@@ -73,7 +73,7 @@
           </p>
         </div>
         <div class="bg-zinc-950 p-2.5 rounded-lg border border-zinc-800 text-[11px] font-mono text-zinc-300 truncate">
-          <span class="text-amber-400">npx caddy-subdomain probe</span> call.keshavsoft.com --reload
+          <span class="text-amber-400">npx caddy-subdomain probe</span> call.keshavsoft.com
         </div>
       </a>
 
@@ -94,7 +94,7 @@
           </p>
         </div>
         <div class="bg-zinc-950 p-2.5 rounded-lg border border-zinc-800 text-[11px] font-mono text-zinc-300 truncate">
-          <span class="text-amber-400">npx caddy-subdomain add</span> call.keshavsoft.com 5000 --force --reload
+          <span class="text-amber-400">npx caddy-subdomain add</span> call.keshavsoft.com 5000
         </div>
       </a>
 
@@ -108,14 +108,14 @@
             <i class="bi bi-arrow-right text-zinc-500 group-hover:text-amber-400 group-hover:translate-x-1 transition"></i>
           </div>
           <h2 class="text-xl font-bold text-white group-hover:text-amber-300 font-mono flex items-center gap-2 mb-2">
-            <span>list [configPath]</span>
+            <span>list</span>
           </h2>
           <p class="text-xs text-zinc-400 leading-relaxed mb-4">
             Extract and index every active subdomain currently listening across all HTTP servers in your Caddy configuration. Zero JSON scrolling needed.
           </p>
         </div>
         <div class="bg-zinc-950 p-2.5 rounded-lg border border-zinc-800 text-[11px] font-mono text-zinc-300 truncate">
-          <span class="text-amber-400">npx caddy-subdomain list</span> /etc/caddy/caddy.json
+          <span class="text-amber-400">npx caddy-subdomain list</span>
         </div>
       </a>
 
@@ -132,11 +132,11 @@
             <span>check &lt;domain&gt;</span>
           </h2>
           <p class="text-xs text-zinc-400 leading-relaxed mb-4">
-            Pre-flight collision verification. Confirms whether a subdomain is available to be registered or already active on the server before mutating files.
+            Ask one direct question: Is this subdomain present in Caddy? Returns an instant Yes or No verdict.
           </p>
         </div>
         <div class="bg-zinc-950 p-2.5 rounded-lg border border-zinc-800 text-[11px] font-mono text-zinc-300 truncate">
-          <span class="text-amber-400">npx caddy-subdomain check</span> quotation.keshavsoft.com
+          <span class="text-amber-400">npx caddy-subdomain check</span> call.keshavsoft.com
         </div>
       </a>
 

@@ -23,8 +23,12 @@
         <span class="font-bold text-sm tracking-wider uppercase text-amber-400 font-mono">add</span>
       </div>
       <div class="flex items-center gap-2 text-xs font-mono">
+        <a href="probe.html" class="text-zinc-400 hover:text-amber-300 transition flex items-center gap-1">
+          <span>probe</span>
+        </a>
+        <span class="text-zinc-700">&bull;</span>
         <a href="list.html" class="text-zinc-400 hover:text-amber-300 transition flex items-center gap-1">
-          <span>Next: list</span>
+          <span>list</span>
           <i class="bi bi-chevron-right text-[10px]"></i>
         </a>
       </div>
@@ -36,21 +40,27 @@
 
     <!-- Header Badge -->
     <div class="inline-flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 text-amber-400 px-3 py-1 rounded-full text-xs font-mono font-semibold mb-4">
-      <span>Level 2 &bull; Backend Promotion</span>
+      <span>Level 2 &bull; 100% Automatic Backend Promotion</span>
     </div>
 
     <h1 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight mb-3">
       npx caddy-subdomain add
     </h1>
     <p class="text-zinc-400 text-sm sm:text-base mb-8 leading-relaxed">
-      Connect your subdomain to your Node.js, Python, or Docker application port. Seamlessly replaces your Level-1 probe with zero downtime and automatic backup.
+      Promote your verified subdomain to reverse proxy your Node.js, Python, or Docker app. <strong>Auto-detects config and auto-reloads with zero downtime.</strong>
     </p>
 
     <!-- The Command Box -->
-    <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 sm:p-5 mb-10 shadow-xl">
-      <div class="text-xs text-zinc-400 uppercase font-mono tracking-wider mb-2">Live Production Syntax:</div>
+    <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 sm:p-5 mb-8 shadow-xl">
+      <div class="flex items-center justify-between text-xs text-zinc-400 uppercase font-mono tracking-wider mb-2">
+        <span>Simple NPX Command:</span>
+        <span class="text-amber-400 lowercase font-normal flex items-center gap-1">
+          <i class="bi bi-check-circle-fill text-[11px]"></i>
+          auto-detects /etc/caddy/caddy.json &amp; auto-reloads
+        </span>
+      </div>
       <div class="flex items-center justify-between gap-3 bg-zinc-950 p-3.5 rounded-lg border border-zinc-800 font-mono text-xs sm:text-sm text-amber-300">
-        <code id="cmd-add" class="truncate select-all">npx caddy-subdomain add call.keshavsoft.com 5000 /etc/caddy/caddy.json --force --reload</code>
+        <code id="cmd-add" class="truncate select-all">npx caddy-subdomain add call.keshavsoft.com 5000</code>
         <button onclick="copyCmd('cmd-add', this)" class="shrink-0 bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 border border-amber-500/30 px-3 py-1.5 rounded-lg text-xs font-sans font-semibold transition flex items-center gap-1">
           <i class="bi bi-clipboard"></i>
           <span>Copy</span>
@@ -58,21 +68,32 @@
       </div>
     </div>
 
+    <!-- Direct Output Box: What Returns in Terminal -->
+    <div class="bg-zinc-900/60 border border-zinc-800 rounded-xl p-5 mb-10">
+      <div class="text-xs font-mono font-semibold text-zinc-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+        <i class="bi bi-terminal text-amber-400"></i>
+        <span>Instant Terminal Response</span>
+      </div>
+      <div class="bg-zinc-950 border border-zinc-800/80 rounded-lg p-4 font-mono text-xs text-zinc-200 space-y-1.5">
+        <div><span class="text-zinc-500">Subdomain:    </span><span class="text-amber-300 font-semibold">call.keshavsoft.com</span></div>
+        <div><span class="text-zinc-500">Target:       </span><span class="text-cyan-400 font-semibold">localhost:5000</span></div>
+        <div><span class="text-zinc-500">Caddy Reload: </span><span class="text-emerald-400 font-semibold">Success</span></div>
+        <div><span class="text-zinc-500">Status:       </span><span class="text-emerald-400 font-semibold">Active</span></div>
+      </div>
+    </div>
+
     <!-- The Story / Narrative -->
     <section class="mb-12">
       <h2 class="text-lg font-bold text-white uppercase tracking-wider mb-4 border-b border-zinc-800 pb-2 flex items-center gap-2">
         <i class="bi bi-book text-amber-400"></i>
-        <span>The Problem &amp; Story</span>
+        <span>Zero-Downtime Hot Promotion</span>
       </h2>
       <div class="text-xs sm:text-sm text-zinc-300 space-y-4 leading-relaxed">
         <p>
-          Once you have completed your <strong>Level 1 Flight Check</strong> with <code class="text-emerald-400 font-mono">probe</code>, your domain already has an active, valid TLS certificate issued by Let's Encrypt, and traffic is successfully flowing through Caddy.
+          Once your subdomain is verified using <code class="text-emerald-400 font-mono">probe</code>, your TLS certificates are already issued. Running <code class="text-white font-mono font-bold">add call.keshavsoft.com 5000</code> seamlessly replaces the probe with a reverse proxy route forwarding to <code class="text-white font-mono">localhost:5000</code>.
         </p>
         <p>
-          Now, you start your Node.js server (e.g. listening on port <code class="text-amber-300 font-mono">5000</code>).
-        </p>
-        <p class="bg-amber-950/40 border border-amber-800/60 p-4 rounded-xl text-amber-200">
-          <strong>The Solution:</strong> Run <code class="text-white font-mono font-bold">add &lt;domain&gt; &lt;port&gt; --force --reload</code>! The <code class="text-amber-300 font-mono">--force</code> flag automatically replaces the static probe route with a reverse proxy forwarding all traffic to <code class="text-white font-mono">localhost:5000</code>. Because Caddy hot-reloads in memory, <strong>active SSL sessions are preserved without dropping a single connection</strong>.
+          Because Caddy reloads in memory, existing TLS handshakes are preserved without dropping a single active client connection.
         </p>
       </div>
     </section>
@@ -106,69 +127,30 @@
       </div>
     </section>
 
-    <!-- Flags and Options -->
-    <section class="mb-12">
-      <h2 class="text-lg font-bold text-white uppercase tracking-wider mb-4 border-b border-zinc-800 pb-2 flex items-center gap-2">
-        <i class="bi bi-flag text-amber-400"></i>
-        <span>Supported Options &amp; Flags</span>
-      </h2>
-      <div class="border border-zinc-800 rounded-xl overflow-hidden text-xs">
-        <table class="w-full text-left border-collapse">
-          <thead>
-            <tr class="bg-zinc-900 border-b border-zinc-800 text-zinc-400 font-mono">
-              <th class="py-3 px-4">Flag</th>
-              <th class="py-3 px-4">Type</th>
-              <th class="py-3 px-4">Description</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-zinc-800/80 font-mono text-zinc-300">
-            <tr>
-              <td class="py-3 px-4 font-bold text-amber-400">--force</td>
-              <td class="py-3 px-4 text-zinc-500">Boolean</td>
-              <td class="py-3 px-4 font-sans text-zinc-300"><strong>Essential for promotion:</strong> Replaces existing domain route (such as Level-1 probe) with the new reverse proxy.</td>
-            </tr>
-            <tr>
-              <td class="py-3 px-4 font-bold text-amber-400">--reload</td>
-              <td class="py-3 px-4 text-zinc-500">Boolean</td>
-              <td class="py-3 px-4 font-sans text-zinc-300">Triggers zero-downtime hot-reload with <code class="text-amber-300 font-mono">caddy reload --config &lt;file&gt;</code>.</td>
-            </tr>
-            <tr>
-              <td class="py-3 px-4 font-bold text-amber-400">--no-backup</td>
-              <td class="py-3 px-4 text-zinc-500">Boolean</td>
-              <td class="py-3 px-4 font-sans text-zinc-300">Skips saving the timestamped <code class="text-zinc-400 font-mono">.bak.&lt;timestamp&gt;</code> file.</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- Next Step Callout -->
-    <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-      <div>
-        <h3 class="font-bold text-white text-base">Want to audit all your active domains?</h3>
-        <p class="text-xs text-zinc-400 mt-0.5">Use the <code class="text-sky-300 font-mono">list</code> command to print an inventory of all active subdomains.</p>
-      </div>
-      <a href="list.html" class="shrink-0 bg-zinc-800 hover:bg-zinc-700 text-white font-semibold text-xs px-4 py-2 rounded-lg transition flex items-center gap-1.5 font-mono">
-        <span>Go to list command</span>
+    <!-- Navigation footer -->
+    <div class="flex items-center justify-between border-t border-zinc-800 pt-6 text-xs font-mono">
+      <a href="probe.html" class="text-zinc-400 hover:text-white flex items-center gap-2">
+        <i class="bi bi-arrow-left"></i>
+        <span>Back to Level-1 probe</span>
+      </a>
+      <a href="list.html" class="bg-zinc-800 text-zinc-200 px-3 py-1.5 rounded-lg hover:bg-zinc-700 transition flex items-center gap-2">
+        <span>Next: list</span>
         <i class="bi bi-arrow-right"></i>
       </a>
     </div>
 
   </main>
 
-  <footer class="w-full border-t border-zinc-800/80 py-6 text-center text-xs text-zinc-500">
-    <p>&copy; KeshavSoft &bull; ISC License &bull; <a href="index.html" class="text-amber-400 hover:underline">NPX Hub</a></p>
-  </footer>
-
   <script>
     function copyCmd(id, btn) {
-      const text = document.getElementById(id).textContent;
-      navigator.clipboard.writeText(text).then(() => {
+      const code = document.getElementById(id).innerText;
+      navigator.clipboard.writeText(code).then(() => {
         const orig = btn.innerHTML;
-        btn.innerHTML = '<i class="bi bi-check2 text-emerald-400"></i><span class="text-emerald-400">Copied!</span>';
-        setTimeout(() => { btn.innerHTML = orig; }, 1500);
+        btn.innerHTML = '<i class="bi bi-check-lg text-amber-400"></i> Copied!';
+        setTimeout(() => btn.innerHTML = orig, 2000);
       });
     }
   </script>
 </body>
+
 </html>
