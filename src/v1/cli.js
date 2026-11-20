@@ -5,7 +5,8 @@ import {
   readCaddyConfig,
   listSubdomains,
   hasSubdomain,
-  addSubdomainToFile
+  addSubdomainToFile,
+  addProbeSubdomainToFile
 } from "./index.js";
 
 export function resolveDefaultPath(customPath) {
@@ -20,30 +21,38 @@ export function resolveDefaultPath(customPath) {
 export function printHelp() {
   console.log(`
 caddy-subdomain (v1.0.0)
-Atomic CLI to inspect, validate, and add subdomains to Caddy JSON.
+Atomic CLI to inspect, validate, probe, and add subdomains to Caddy JSON.
 
 Usage:
+  npx caddy-subdomain probe <domain> [configPath] [options]
   npx caddy-subdomain add <domain> <port> [configPath] [options]
   npx caddy-subdomain list [configPath]
   npx caddy-subdomain check <domain> [configPath]
 
 Commands:
-  add <domain> <port>       Append a new reverse proxy subdomain to Caddy
+  probe <domain>            Add a Level-1 Smoke Test probe (static_response) to verify DNS & HTTPS
+  add <domain> <port>       Append or upgrade a subdomain to a reverse proxy (e.g. Node app)
   list                      List all currently configured subdomains
   check <domain>            Check if a subdomain is already registered
 
 Options:
   --reload                  Trigger 'caddy reload' after saving
-  --force                   Bypass duplicate subdomain check
+  --force                   Overwrite existing subdomain configuration
   --no-backup               Skip timestamped backup file creation
   -h, --help                Show help message
   -v, --version             Show version number
 
 Examples:
-  npx caddy-subdomain add billing.keshavsoft.com 5000
-  npx caddy-subdomain add billing.keshavsoft.com 5000 ./caddy.json --reload
-  npx caddy-subdomain list ./caddy.json
-  npx caddy-subdomain check quotation.keshavsoft.com
+  # Level 1: Probe test (Verify DNS + SSL zero dependencies)
+  npx caddy-subdomain probe call.keshavsoft.com
+  npx caddy-subdomain probe call.keshavsoft.com /etc/caddy/caddy.json --reload
+
+  # Level 2: Promote to Node.js backend port
+  npx caddy-subdomain add call.keshavsoft.com 5000 --force --reload
+
+  # Check & List
+  npx caddy-subdomain list /etc/caddy/caddy.json
+  npx caddy-subdomain check call.keshavsoft.com
 `);
 }
 
@@ -59,6 +68,58 @@ export function run(args = process.argv.slice(2)) {
   }
 
   const command = args[0].toLowerCase();
+
+  // Command: PROBE (Level 1 Flight Check)
+  if (command === "probe") {
+    const domain = args[1];
+    if (!domain || domain.startsWith("-")) {
+      console.error("Error: 'probe' requires a domain.\n  Example: npx caddy-subdomain probe call.keshavsoft.com");
+      process.exitCode = 1;
+      return;
+    }
+
+    const force = args.includes("--force");
+    const noBackup = args.includes("--no-backup");
+    const reload = args.includes("--reload");
+
+    const nonFlags = args.slice(2).filter((a) => !a.startsWith("-"));
+    const configPath = resolveDefaultPath(nonFlags[0]);
+
+    try {
+      const result = addProbeSubdomainToFile(configPath, {
+        domain,
+        force,
+        backup: !noBackup
+      });
+
+      console.log(`\n🚀 Level-1 Probe Route Added for: '${domain}'`);
+      console.log(`📁 File updated: ${result.filePath}`);
+      if (result.backupFile) {
+        console.log(`💾 Backup saved: ${result.backupFile}`);
+      }
+      console.log(`\n🔎 What this does:`);
+      console.log(`  1. Caddy will auto-issue Let's Encrypt / ZeroSSL certificate for '${domain}'`);
+      console.log(`  2. Visits to https://${domain} will respond with: 200 OK (DNS & HTTPS Verified)`);
+      console.log(`  3. Zero Node.js processes or backend ports required!`);
+
+      if (reload) {
+        try {
+          console.log("\nReloading Caddy server...");
+          execSync(`caddy reload --config "${result.filePath}"`, { stdio: "inherit" });
+          console.log("✅ Caddy hot-reload completed successfully.");
+          console.log(`👉 Test live now: curl -I https://${domain} or open in browser!`);
+        } catch (reloadErr) {
+          console.warn(`⚠️ Warning: Hot-reload failed: ${reloadErr.message}`);
+        }
+      } else {
+        console.log(`\nTip: Run with --reload to apply changes immediately to live Caddy.`);
+      }
+    } catch (err) {
+      console.error(`Error: ${err.message}`);
+      process.exitCode = 1;
+    }
+    return;
+  }
 
   // Command: LIST
   if (command === "list") {

@@ -87,6 +87,36 @@ export function hasSubdomain(caddyConfig, domain) {
 }
 
 /**
+ * Build a Level-1 Smoke Test Probe route block using native static_response.
+ * Requires ZERO external ports, ZERO files on disk, and ZERO Node.js processes.
+ * Used to verify DNS propagation and automatic HTTPS issuance.
+ * @param {string} domain
+ * @param {object} [options]
+ * @param {string} [options.message]
+ * @returns {object}
+ */
+export function buildProbeRoute(domain, options = {}) {
+  const message =
+    options.message ||
+    `✅ Subdomain '${domain}' is LIVE on Caddy!\nDNS propagation and Automatic HTTPS (SSL) verified successfully.\n`;
+
+  return {
+    match: [{ host: [domain] }],
+    handle: [
+      {
+        handler: "static_response",
+        status_code: 200,
+        headers: {
+          "Content-Type": ["text/plain; charset=utf-8"]
+        },
+        body: message
+      }
+    ],
+    terminal: true
+  };
+}
+
+/**
  * Build a standard Caddy route block for a reverse proxy.
  * Uses caddy-template if available, with a clean built-in fallback.
  * @param {string} domain
@@ -126,7 +156,99 @@ export function buildProxyRoute(domain, port, template = "proxy") {
 }
 
 /**
- * Append a subdomain route to an in-memory Caddy configuration object.
+ * Helper to ensure standard Caddy HTTP server structure and return the routes array.
+ * @param {object} caddyConfig
+ * @returns {Array<object>}
+ */
+function getOrCreateRoutes(caddyConfig) {
+  caddyConfig.apps ??= {};
+  caddyConfig.apps.http ??= {};
+  caddyConfig.apps.http.servers ??= {};
+
+  const serverKey = Object.keys(caddyConfig.apps.http.servers)[0] || "srv0";
+  caddyConfig.apps.http.servers[serverKey] ??= { listen: [":443"], routes: [] };
+  caddyConfig.apps.http.servers[serverKey].routes ??= [];
+
+  return caddyConfig.apps.http.servers[serverKey].routes;
+}
+
+/**
+ * Helper to insert or replace a route.
+ * @param {Array<object>} routes
+ * @param {string} domain
+ * @param {object} newRoute
+ * @param {boolean} force
+ * @returns {number} routeIndex
+ */
+function upsertRoute(routes, domain, newRoute, force) {
+  const existingIndex = routes.findIndex((r) =>
+    (r.match || []).some((m) => (m.host || []).some((h) => h.toLowerCase() === domain.toLowerCase()))
+  );
+
+  if (existingIndex !== -1) {
+    if (!force) {
+      throw new Error(`Domain '${domain}' is already configured in Caddy at index ${existingIndex}. Use force: true to override.`);
+    }
+    routes[existingIndex] = newRoute;
+    return existingIndex;
+  }
+
+  routes.push(newRoute);
+  return routes.length - 1;
+}
+
+/**
+ * Add a Level-1 Probe subdomain to an in-memory Caddy configuration.
+ * @param {object} caddyConfig
+ * @param {object} options
+ * @param {string} options.domain
+ * @param {boolean} [options.force=false]
+ * @param {string} [options.message]
+ * @returns {{ updatedConfig: object, newRoute: object, routeIndex: number }}
+ */
+export function addProbeSubdomain(caddyConfig, { domain, force = false, message } = {}) {
+  if (!caddyConfig || typeof caddyConfig !== "object") {
+    throw new Error("Invalid Caddy configuration: expected an object");
+  }
+  if (!domain) {
+    throw new Error("Missing required 'domain' parameter for probe");
+  }
+
+  const routes = getOrCreateRoutes(caddyConfig);
+  const newRoute = buildProbeRoute(domain, { message });
+  const routeIndex = upsertRoute(routes, domain, newRoute, force);
+
+  return {
+    updatedConfig: caddyConfig,
+    newRoute,
+    routeIndex
+  };
+}
+
+/**
+ * Add a Level-1 Probe subdomain directly to a Caddy JSON file with auto-backup.
+ * @param {string} filePath
+ * @param {object} options
+ * @param {string} options.domain
+ * @param {boolean} [options.force=false]
+ * @param {boolean} [options.backup=true]
+ * @param {string} [options.message]
+ * @returns {{ updatedConfig: object, newRoute: object, routeIndex: number, backupFile: string|null, filePath: string }}
+ */
+export function addProbeSubdomainToFile(filePath, { domain, force = false, backup = true, message } = {}) {
+  const config = readCaddyConfig(filePath);
+  const result = addProbeSubdomain(config, { domain, force, message });
+  const { backupFile, filePath: savedPath } = writeCaddyConfig(filePath, result.updatedConfig, { backup });
+
+  return {
+    ...result,
+    backupFile,
+    filePath: savedPath
+  };
+}
+
+/**
+ * Append a reverse proxy subdomain route to an in-memory Caddy configuration object.
  * @param {object} caddyConfig
  * @param {object} options
  * @param {string} options.domain - Target subdomain (e.g. "api.keshavsoft.com")
@@ -139,32 +261,18 @@ export function addSubdomain(caddyConfig, { domain, port, template = "proxy", fo
   if (!caddyConfig || typeof caddyConfig !== "object") {
     throw new Error("Invalid Caddy configuration: expected an object");
   }
-
   if (!domain || !port) {
     throw new Error("Missing required 'domain' and 'port' parameters");
   }
 
-  if (!force && hasSubdomain(caddyConfig, domain)) {
-    throw new Error(`Domain '${domain}' is already configured in Caddy. Use force: true to override.`);
-  }
-
-  caddyConfig.apps ??= {};
-  caddyConfig.apps.http ??= {};
-  caddyConfig.apps.http.servers ??= {};
-
-  const serverKey = Object.keys(caddyConfig.apps.http.servers)[0] || "srv0";
-  caddyConfig.apps.http.servers[serverKey] ??= { listen: [":443"], routes: [] };
-  caddyConfig.apps.http.servers[serverKey].routes ??= [];
-
-  const routes = caddyConfig.apps.http.servers[serverKey].routes;
+  const routes = getOrCreateRoutes(caddyConfig);
   const newRoute = buildProxyRoute(domain, port, template);
-
-  routes.push(newRoute);
+  const routeIndex = upsertRoute(routes, domain, newRoute, force);
 
   return {
     updatedConfig: caddyConfig,
     newRoute,
-    routeIndex: routes.length - 1
+    routeIndex
   };
 }
 
