@@ -9,6 +9,8 @@ import {
   addProbeSubdomainToFile
 } from "./index.js";
 
+const VERSION = "1.1.2";
+
 /**
  * Automatically discovers the Caddy configuration file:
  * 1. Explicit path if provided
@@ -34,51 +36,58 @@ export function resolveDefaultPath(customPath) {
   return vps;
 }
 
-export function printHelp() {
+export function printHelp(isMissing = false) {
+  const header = isMissing
+    ? "⚠️  No command provided! Here is how to use caddy-subdomain:"
+    : "caddy-subdomain — Zero-Config Subdomain Engine for Caddy Server";
+
   console.log(`
-caddy-subdomain (v1.1.1)
-The Zero-Config Subdomain Engine for Caddy Server.
+============================================================
+  ${header}
+============================================================
 
-Zero configuration required:
-- Caddy config location (/etc/caddy/caddy.json) is detected automatically.
-- Caddy hot-reload is executed automatically.
-- Instant Yes/No verification for domain presence and live HTTPS traffic.
+Here are the 2 primary commands you need:
 
-Usage:
-  npx caddy-subdomain probe <domain>
-  npx caddy-subdomain add <domain> <port>
-  npx caddy-subdomain check <domain>
-  npx caddy-subdomain list
+1️⃣  LEVEL 1: SMOKE TEST (Verify DNS & SSL with ZERO ports/processes)
+    Required Input  : <domain>
+    Sample Command  : npx caddy-subdomain probe call.keshavsoft.com
+    What it does    : Injects a 200 OK test route, automatically reloads
+                      Caddy, and verifies live HTTPS & SSL certificate.
 
-Commands:
-  probe <domain>            Add Level-1 smoke probe (zero ports), auto-reload & test live HTTPS
-  add <domain> <port>       Connect subdomain to backend port & auto-reload with zero downtime
-  check <domain>            Check if subdomain is already registered in Caddy (Yes / No)
-  list                      List all configured subdomains
+2️⃣  LEVEL 2: BACKEND PROMOTION (Connect to your Node.js / Docker app)
+    Required Inputs : <domain> <port>
+    Sample Command  : npx caddy-subdomain add call.keshavsoft.com 5000
+    What it does    : Upgrades the probe to a reverse proxy on port 5000
+                      with zero downtime and automatic backup.
 
-Options:
-  --no-reload               Skip automatic 'caddy reload'
-  --no-backup               Skip automatic timestamped backup file creation
-  --force                   Force overwrite of an existing route
-  -h, --help                Show help message
-  -v, --version             Show version number
+------------------------------------------------------------
+UTILITY COMMANDS:
+    • Check existence : npx caddy-subdomain check call.keshavsoft.com
+    • List subdomains : npx caddy-subdomain list
 
-Examples:
-  npx caddy-subdomain probe call.keshavsoft.com
-  npx caddy-subdomain add call.keshavsoft.com 5000
-  npx caddy-subdomain check call.keshavsoft.com
-  npx caddy-subdomain list
+OPTIONS:
+    --no-reload       Skip automatic Caddy reload
+    --no-backup       Skip timestamped backup file creation
+    --force           Force overwrite of existing route
+    -h, --help        Show this guide
+    -v, --version     Show version (${VERSION})
+============================================================
 `);
 }
 
 export async function run(args = process.argv.slice(2)) {
-  if (args.length === 0 || args.includes("-h") || args.includes("--help")) {
-    printHelp();
+  if (args.length === 0) {
+    printHelp(true);
+    return;
+  }
+
+  if (args.includes("-h") || args.includes("--help")) {
+    printHelp(false);
     return;
   }
 
   if (args.includes("-v") || args.includes("--version")) {
-    console.log("1.1.1");
+    console.log(VERSION);
     return;
   }
 
@@ -90,7 +99,12 @@ export async function run(args = process.argv.slice(2)) {
   if (command === "probe") {
     const domain = args[1];
     if (!domain || domain.startsWith("-")) {
-      console.error("Error: 'probe' requires a domain.\n  Usage: npx caddy-subdomain probe <domain>\n  Example: npx caddy-subdomain probe call.keshavsoft.com");
+      console.error(`
+❌ Error: 'probe' requires 1 input: <domain>
+
+Sample:
+  npx caddy-subdomain probe call.keshavsoft.com
+`);
       process.exitCode = 1;
       return;
     }
@@ -154,7 +168,12 @@ export async function run(args = process.argv.slice(2)) {
   if (command === "check") {
     const domain = args[1];
     if (!domain || domain.startsWith("-")) {
-      console.error("Error: 'check' requires a domain.\n  Usage: npx caddy-subdomain check <domain>\n  Example: npx caddy-subdomain check call.keshavsoft.com");
+      console.error(`
+❌ Error: 'check' requires 1 input: <domain>
+
+Sample:
+  npx caddy-subdomain check call.keshavsoft.com
+`);
       process.exitCode = 1;
       return;
     }
@@ -185,7 +204,12 @@ export async function run(args = process.argv.slice(2)) {
     const port = args[2];
 
     if (!domain || !port || domain.startsWith("-") || port.startsWith("-")) {
-      console.error("Error: 'add' requires both <domain> and <port>.\n  Usage: npx caddy-subdomain add <domain> <port>\n  Example: npx caddy-subdomain add call.keshavsoft.com 5000");
+      console.error(`
+❌ Error: 'add' requires 2 inputs: <domain> <port>
+
+Sample:
+  npx caddy-subdomain add call.keshavsoft.com 5000
+`);
       process.exitCode = 1;
       return;
     }
@@ -248,7 +272,7 @@ export async function run(args = process.argv.slice(2)) {
     return;
   }
 
-  console.error(`Unknown command: '${command}'. Run 'npx caddy-subdomain --help' for usage.`);
+  console.error(`Unknown command: '${command}'.\nRun 'npx caddy-subdomain' without arguments to see available commands.`);
   process.exitCode = 1;
 }
 
