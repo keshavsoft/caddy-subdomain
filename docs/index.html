@@ -142,13 +142,19 @@
               <span class="w-5 h-5 rounded-full bg-amber-500/20 border border-amber-500/30 flex items-center justify-center font-bold">2</span>
               <span>Level 2: The Promotion</span>
             </div>
-            <h3 class="text-lg font-bold text-white mb-2">Connect Your Backend</h3>
+            <h3 class="text-lg font-bold text-white mb-2">Connect Your Backend or Static Root</h3>
             <p class="text-xs text-zinc-400 mb-4 leading-relaxed">
-              Now that the network pipe and SSL certificate are mathematically proven live, seamlessly promote the subdomain to your actual application target.
+              Now that the network pipe and SSL certificate are mathematically proven live, seamlessly promote the subdomain to a reverse proxy or static file server.
             </p>
-            <div class="bg-zinc-950 p-3 rounded-lg border border-zinc-800 text-xs font-mono text-zinc-300 space-y-1">
-              <div class="text-zinc-500"># Promote to Node app:</div>
-              <div class="text-amber-300">npx caddy-subdomain add call.keshavsoft.com 5000</div>
+            <div class="bg-zinc-950 p-3 rounded-lg border border-zinc-800 text-xs font-mono text-zinc-300 space-y-2">
+              <div>
+                <span class="text-zinc-500"># Option A (Reverse Proxy):</span><br>
+                <span class="text-amber-300">npx caddy-subdomain add call.keshavsoft.com 5000</span>
+              </div>
+              <div>
+                <span class="text-zinc-500"># Option B (Static File Server):</span><br>
+                <span class="text-teal-300">npx caddy-subdomain static call.keshavsoft.com /usr/share/caddy/call</span>
+              </div>
             </div>
           </div>
           <div class="mt-4 pt-3 border-t border-zinc-800/80 flex items-center gap-2 text-xs text-amber-400">
@@ -180,7 +186,8 @@
             <label class="block text-xs font-semibold text-zinc-300 mb-1.5">Action</label>
             <select id="gen-action" onchange="updateCommand()" class="w-full bg-zinc-950 border border-zinc-700/80 text-zinc-200 text-xs sm:text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-amber-400">
               <option value="probe" selected>probe — Level 1: Verify DNS & SSL (static_response)</option>
-              <option value="add">add — Level 2: Reverse Proxy to Port</option>
+              <option value="add">add — Level 2A: Reverse Proxy to Port</option>
+              <option value="static">static — Level 2B: Static File Server (file_server)</option>
               <option value="list">list — List all configured subdomains</option>
               <option value="check">check — Test if domain is already taken</option>
             </select>
@@ -194,9 +201,9 @@
               placeholder="e.g. api.keshavsoft.com">
           </div>
 
-          <!-- Port (Only for add) -->
+          <!-- Port / Root (For add or static) -->
           <div id="field-port" class="hidden">
-            <label class="block text-xs font-semibold text-zinc-300 mb-1.5">Backend Port / Dial</label>
+            <label id="lbl-port" class="block text-xs font-semibold text-zinc-300 mb-1.5">Backend Port / Dial</label>
             <input type="text" id="gen-port" value="5000" oninput="updateCommand()"
               class="w-full bg-zinc-950 border border-zinc-700/80 text-zinc-200 text-xs sm:text-sm rounded-lg px-3 py-2 font-mono focus:outline-none focus:border-amber-400"
               placeholder="e.g. 5000 or localhost:5000">
@@ -259,7 +266,8 @@
   readCaddyConfig, 
   hasSubdomain, 
   addProbeSubdomainToFile, 
-  addSubdomainToFile 
+  addSubdomainToFile,
+  addStaticSubdomainToFile
 } <span class="text-zinc-400">from</span> <span class="text-emerald-400">"caddy-subdomain"</span>;</pre>
 
         <div class="text-zinc-500 mb-2">// 2. Level 1: Add Probe to verify DNS & SSL</div>
@@ -269,14 +277,23 @@
 });
 console.log(<span class="text-emerald-400">`Probe backup created at: ${probe.backupFile}`</span>);</pre>
 
-        <div class="text-zinc-500 mb-2">// 3. Level 2: Promote probe route to real backend port</div>
-        <pre class="text-zinc-300 overflow-x-auto"><span class="text-zinc-400">const</span> live = <span class="text-amber-300">addSubdomainToFile</span>(<span class="text-emerald-400">"/etc/caddy/caddy.json"</span>, {
+        <div class="text-zinc-500 mb-2">// 3. Level 2A: Promote probe route to reverse proxy backend port</div>
+        <pre class="text-zinc-300 mb-6 overflow-x-auto"><span class="text-zinc-400">const</span> live = <span class="text-amber-300">addSubdomainToFile</span>(<span class="text-emerald-400">"/etc/caddy/caddy.json"</span>, {
   domain: <span class="text-emerald-400">"call.keshavsoft.com"</span>,
   port: <span class="text-purple-400">5000</span>,
   force: <span class="text-purple-400">true</span>, <span class="text-zinc-500">// Overwrites probe with reverse proxy</span>
   backup: <span class="text-purple-400">true</span>
 });
 console.log(<span class="text-emerald-400">`Subdomain live at route index: ${live.routeIndex}`</span>);</pre>
+
+        <div class="text-zinc-500 mb-2">// 3. Level 2B: Promote probe route to static file server document root</div>
+        <pre class="text-zinc-300 overflow-x-auto"><span class="text-zinc-400">const</span> staticSite = <span class="text-amber-300">addStaticSubdomainToFile</span>(<span class="text-emerald-400">"/etc/caddy/caddy.json"</span>, {
+  domain: <span class="text-emerald-400">"call.keshavsoft.com"</span>,
+  root: <span class="text-emerald-400">"/usr/share/caddy/call.keshavsoft.com"</span>,
+  force: <span class="text-purple-400">true</span>, <span class="text-zinc-500">// Overwrites probe with static file_server</span>
+  backup: <span class="text-purple-400">true</span>
+});
+console.log(<span class="text-emerald-400">`Static site live at: ${staticSite.filePath}`</span>);</pre>
       </div>
     </section>
 
@@ -307,8 +324,18 @@ console.log(<span class="text-emerald-400">`Subdomain live at route index: ${liv
       const domainField = document.getElementById('field-domain');
       const flagsField = document.getElementById('field-flags');
 
+      const lblPort = document.getElementById('lbl-port');
+
       if (action === 'add') {
         portField.classList.remove('hidden');
+        lblPort.textContent = 'Backend Port / Dial';
+        document.getElementById('gen-port').placeholder = 'e.g. 5000 or localhost:5000';
+        domainField.classList.remove('hidden');
+        flagsField.classList.remove('hidden');
+      } else if (action === 'static') {
+        portField.classList.remove('hidden');
+        lblPort.textContent = 'Document Root Path';
+        document.getElementById('gen-port').placeholder = 'e.g. /usr/share/caddy/call.keshavsoft.com';
         domainField.classList.remove('hidden');
         flagsField.classList.remove('hidden');
       } else if (action === 'probe') {
@@ -331,7 +358,7 @@ console.log(<span class="text-emerald-400">`Subdomain live at route index: ${liv
         if (domain) parts.push(domain);
       }
 
-      if (action === 'add' && port) {
+      if ((action === 'add' || action === 'static') && port) {
         parts.push(port);
       }
 
@@ -339,7 +366,7 @@ console.log(<span class="text-emerald-400">`Subdomain live at route index: ${liv
         parts.push(path);
       }
 
-      if (action === 'probe' || action === 'add') {
+      if (action === 'probe' || action === 'add' || action === 'static') {
         if (force) parts.push('--force');
         if (nobackup) parts.push('--no-backup');
         if (noreload) parts.push('--no-reload');

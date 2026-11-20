@@ -125,8 +125,12 @@ export function getSubdomainEntry(caddyConfig, domain) {
             break;
           }
           if (h.handler === "subroute") {
+            let rootPath = "";
             for (const sub of h.routes || []) {
               for (const subH of sub.handle || []) {
+                if (subH.handler === "vars" && subH.root) {
+                  rootPath = subH.root;
+                }
                 if (subH.handler === "reverse_proxy") {
                   type = "reverse_proxy";
                   const dials = (subH.upstreams || []).map((u) => u.dial).join(", ");
@@ -135,7 +139,7 @@ export function getSubdomainEntry(caddyConfig, domain) {
                 }
                 if (subH.handler === "file_server") {
                   type = "file_server";
-                  targetDesc = "file_server";
+                  targetDesc = rootPath || "file_server";
                   break;
                 }
               }
@@ -246,6 +250,47 @@ export function buildProxyRoute(domain, port, template = "proxy") {
 }
 
 /**
+ * Build a standard Caddy route block for a static file server.
+ * Uses caddy-template if available, with a clean built-in fallback.
+ * @param {string} domain
+ * @param {string} [root] - Document root path (e.g. "/usr/share/caddy" or "/var/www/domain")
+ * @returns {object}
+ */
+export function buildStaticRoute(domain, root) {
+  const docRoot = (root && String(root).trim()) || `/usr/share/caddy/${domain}`;
+  try {
+    return getTemplate("static", {
+      host: domain,
+      root: docRoot
+    });
+  } catch {
+    return {
+      match: [{ host: [domain] }],
+      handle: [
+        {
+          handler: "subroute",
+          routes: [
+            {
+              handle: [
+                {
+                  handler: "vars",
+                  root: docRoot
+                },
+                {
+                  handler: "file_server",
+                  hide: ["/etc/caddy/Caddyfile"]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      terminal: true
+    };
+  }
+}
+
+/**
  * Helper to ensure standard Caddy HTTP server structure and return the routes array.
  * @param {object} caddyConfig
  * @returns {Array<object>}
@@ -338,25 +383,87 @@ export function addProbeSubdomainToFile(filePath, { domain, force = false, backu
 }
 
 /**
- * Append a reverse proxy subdomain route to an in-memory Caddy configuration object.
+ * Add a Static File Server subdomain to an in-memory Caddy configuration.
  * @param {object} caddyConfig
  * @param {object} options
- * @param {string} options.domain - Target subdomain (e.g. "api.keshavsoft.com")
- * @param {number|string} options.port - Target backend port or dial target (e.g. 5000)
- * @param {string} [options.template="proxy"] - Route blueprint template
- * @param {boolean} [options.force=false] - Bypass collision check
+ * @param {string} options.domain
+ * @param {string} [options.root] - Document root path on the server
+ * @param {boolean} [options.force=false]
  * @returns {{ updatedConfig: object, newRoute: object, routeIndex: number }}
  */
-export function addSubdomain(caddyConfig, { domain, port, template = "proxy", force = false }) {
+export function addStaticSubdomain(caddyConfig, { domain, root, force = false } = {}) {
   if (!caddyConfig || typeof caddyConfig !== "object") {
     throw new Error("Invalid Caddy configuration: expected an object");
   }
-  if (!domain || !port) {
-    throw new Error("Missing required 'domain' and 'port' parameters");
+  if (!domain) {
+    throw new Error("Missing required 'domain' parameter for static subdomain");
   }
 
   const routes = getOrCreateRoutes(caddyConfig);
-  const newRoute = buildProxyRoute(domain, port, template);
+  const newRoute = buildStaticRoute(domain, root);
+  const routeIndex = upsertRoute(routes, domain, newRoute, force);
+
+  return {
+    updatedConfig: caddyConfig,
+    newRoute,
+    routeIndex
+  };
+}
+
+/**
+ * Add a Static File Server subdomain directly to a Caddy JSON file with auto-backup.
+ * @param {string} filePath
+ * @param {object} options
+ * @param {string} options.domain
+ * @param {string} [options.root]
+ * @param {boolean} [options.force=false]
+ * @param {boolean} [options.backup=true]
+ * @returns {{ updatedConfig: object, newRoute: object, routeIndex: number, backupFile: string|null, filePath: string }}
+ */
+export function addStaticSubdomainToFile(filePath, { domain, root, force = false, backup = true } = {}) {
+  const config = readCaddyConfig(filePath);
+  const result = addStaticSubdomain(config, { domain, root, force });
+  const { backupFile, filePath: savedPath } = writeCaddyConfig(filePath, result.updatedConfig, { backup });
+
+  return {
+    ...result,
+    backupFile,
+    filePath: savedPath
+  };
+}
+
+/**
+ * Append or promote a subdomain route (reverse proxy or static file server) to an in-memory Caddy configuration.
+ * @param {object} caddyConfig
+ * @param {object} options
+ * @param {string} options.domain - Target subdomain (e.g. "api.keshavsoft.com")
+ * @param {number|string} [options.port] - Target backend port (e.g. 5000) OR static document root path (e.g. "/var/www/site")
+ * @param {string} [options.target] - Target alias for port or root path
+ * @param {string} [options.root] - Document root path for static file server
+ * @param {string} [options.template] - Optional template override ("proxy" or "static")
+ * @param {boolean} [options.force=false] - Bypass collision check
+ * @returns {{ updatedConfig: object, newRoute: object, routeIndex: number }}
+ */
+export function addSubdomain(caddyConfig, { domain, port, target, root, template, force = false }) {
+  if (!caddyConfig || typeof caddyConfig !== "object") {
+    throw new Error("Invalid Caddy configuration: expected an object");
+  }
+  const dialOrPath = String(port || target || root || "").trim();
+  if (!domain || !dialOrPath) {
+    throw new Error("Missing required 'domain' and target ('port' or 'root') parameters");
+  }
+
+  const isStatic =
+    template === "static" ||
+    dialOrPath.startsWith("/") ||
+    dialOrPath.startsWith("./") ||
+    dialOrPath.includes("\\");
+
+  const routes = getOrCreateRoutes(caddyConfig);
+  const newRoute = isStatic
+    ? buildStaticRoute(domain, dialOrPath)
+    : buildProxyRoute(domain, dialOrPath, template || "proxy");
+
   const routeIndex = upsertRoute(routes, domain, newRoute, force);
 
   return {
@@ -368,18 +475,21 @@ export function addSubdomain(caddyConfig, { domain, port, template = "proxy", fo
 
 /**
  * End-to-end operation: Read -> Guard Check -> Build -> Append -> Backup -> Write.
+ * Supports both reverse proxy ports and static file server paths.
  * @param {string} filePath
  * @param {object} options
  * @param {string} options.domain
- * @param {number|string} options.port
- * @param {string} [options.template="proxy"]
+ * @param {number|string} [options.port]
+ * @param {string} [options.target]
+ * @param {string} [options.root]
+ * @param {string} [options.template]
  * @param {boolean} [options.force=false]
  * @param {boolean} [options.backup=true]
  * @returns {{ updatedConfig: object, newRoute: object, routeIndex: number, backupFile: string|null, filePath: string }}
  */
-export function addSubdomainToFile(filePath, { domain, port, template = "proxy", force = false, backup = true }) {
+export function addSubdomainToFile(filePath, { domain, port, target, root, template, force = false, backup = true }) {
   const config = readCaddyConfig(filePath);
-  const result = addSubdomain(config, { domain, port, template, force });
+  const result = addSubdomain(config, { domain, port, target, root, template, force });
   const { backupFile, filePath: savedPath } = writeCaddyConfig(filePath, result.updatedConfig, { backup });
 
   return {

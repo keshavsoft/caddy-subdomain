@@ -13,6 +13,9 @@ import {
   addProbeSubdomainToFile,
   addSubdomain,
   addSubdomainToFile,
+  buildStaticRoute,
+  addStaticSubdomain,
+  addStaticSubdomainToFile,
   getSubdomainEntry,
   listSubdomainDetails
 } from "../src/index.js";
@@ -164,3 +167,67 @@ test("listSubdomainDetails returns mapped details for all domains", () => {
   assert.equal(details[0].domain, "quotation.keshavsoft.com");
   assert.equal(details[0].type, "reverse_proxy");
 });
+
+test("buildStaticRoute returns valid file_server subroute", () => {
+  const route = buildStaticRoute("cli.keshavsoft.com", "/usr/share/cli.keshavsoft.com");
+  assert.deepEqual(route.match[0].host, ["cli.keshavsoft.com"]);
+  assert.equal(route.handle[0].handler, "subroute");
+  const subHandle = route.handle[0].routes[0].handle;
+  assert.equal(subHandle[0].handler, "vars");
+  assert.equal(subHandle[0].root, "/usr/share/cli.keshavsoft.com");
+  assert.equal(subHandle[1].handler, "file_server");
+});
+
+test("addStaticSubdomain adds file_server route in memory", () => {
+  const config = readCaddyConfig(samplePath);
+  const result = addStaticSubdomain(config, {
+    domain: "assets.keshavsoft.com",
+    root: "/var/www/assets"
+  });
+  assert.ok(result.newRoute);
+  assert.equal(hasSubdomain(config, "assets.keshavsoft.com"), true);
+
+  const entry = getSubdomainEntry(config, "assets.keshavsoft.com");
+  assert.equal(entry.type, "file_server");
+  assert.equal(entry.target, "/var/www/assets");
+});
+
+test("addStaticSubdomainToFile writes file and creates backup", () => {
+  const tempPath = resolve(__dirname, "fixtures/caddy.temp.static.json");
+  const initial = readCaddyConfig(samplePath);
+  writeFileSync(tempPath, JSON.stringify(initial, null, 2), "utf8");
+
+  try {
+    const result = addStaticSubdomainToFile(tempPath, {
+      domain: "docs.keshavsoft.com",
+      root: "/usr/share/docs",
+      backup: true
+    });
+
+    assert.ok(result.backupFile);
+    assert.ok(existsSync(result.backupFile));
+
+    const updated = readCaddyConfig(tempPath);
+    const entry = getSubdomainEntry(updated, "docs.keshavsoft.com");
+    assert.equal(entry.type, "file_server");
+    assert.equal(entry.target, "/usr/share/docs");
+
+    unlinkSync(result.backupFile);
+  } finally {
+    if (existsSync(tempPath)) unlinkSync(tempPath);
+  }
+});
+
+test("addSubdomain auto-detects static file path and creates file_server route", () => {
+  const config = readCaddyConfig(samplePath);
+  const result = addSubdomain(config, {
+    domain: "spa.keshavsoft.com",
+    target: "/var/www/spa"
+  });
+  assert.ok(result.newRoute);
+
+  const entry = getSubdomainEntry(config, "spa.keshavsoft.com");
+  assert.equal(entry.type, "file_server");
+  assert.equal(entry.target, "/var/www/spa");
+});
+

@@ -8,10 +8,11 @@ import {
   getSubdomainEntry,
   listSubdomainDetails,
   addSubdomainToFile,
+  addStaticSubdomainToFile,
   addProbeSubdomainToFile
 } from "./index.js";
 
-const VERSION = "1.1.3";
+const VERSION = "1.1.4";
 
 /**
  * Automatically discovers the Caddy configuration file:
@@ -48,19 +49,23 @@ export function printHelp(isMissing = false) {
   ${header}
 ============================================================
 
-Here are the 2 primary commands you need:
-
-1️⃣  LEVEL 1: SMOKE TEST (Verify DNS & SSL with ZERO ports/processes)
+1️⃣  LEVEL 1: FLIGHT CHECK (Verify DNS & SSL with ZERO ports/processes)
     Required Input  : <domain>
     Sample Command  : npx caddy-subdomain probe call.keshavsoft.com
     What it does    : Injects a 200 OK test route, automatically reloads
                       Caddy, and verifies live HTTPS & SSL certificate.
 
-2️⃣  LEVEL 2: BACKEND PROMOTION (Connect to your Node.js / Docker app)
+2️⃣  LEVEL 2: BACKEND PROMOTION (Choose your architecture)
+
+    Option A: Reverse Proxy (Node.js / Express / Docker / Go app)
     Required Inputs : <domain> <port>
     Sample Command  : npx caddy-subdomain add call.keshavsoft.com 5000
-    What it does    : Upgrades the probe to a reverse proxy on port 5000
-                      with zero downtime and automatic backup.
+    What it does    : Upgrades the route to reverse proxy localhost:5000.
+
+    Option B: Static File Server (HTML / SPA / Docs / Assets)
+    Required Inputs : <domain> [rootPath]
+    Sample Command  : npx caddy-subdomain static call.keshavsoft.com /usr/share/caddy/call
+    What it does    : Sets up static file serving with auto-detected root.
 
 ------------------------------------------------------------
 OBSERVABILITY & UTILITY COMMANDS:
@@ -137,7 +142,7 @@ Sample:
 
       console.log(`Subdomain:        ${domain}`);
       console.log(`Present in Caddy: ${alreadyPresent && !force ? "Yes" : "Yes (Probe Active)"}`);
-      console.log(`Entry Type:       Level-1 Smoke Probe (static_response 200 OK)`);
+      console.log(`Entry Type:       Level-1 Flight Check (static_response 200 OK)`);
 
       // Automatic Caddy reload
       if (!noReload) {
@@ -210,7 +215,9 @@ Sample:
       console.log(`Present in Caddy: Yes`);
       const typeLabel =
         entry.type === "probe"
-          ? "Level-1 Smoke Probe (static_response)"
+          ? "Level-1 Flight Check (static_response 200 OK)"
+          : entry.type === "file_server"
+          ? `Level-2 Static File Server (root: ${entry.target})`
           : entry.type === "reverse_proxy"
           ? `Level-2 Reverse Proxy (➔ ${entry.target})`
           : `${entry.type} (➔ ${entry.target})`;
@@ -230,18 +237,19 @@ Sample:
   }
 
   // ----------------------------------------------------
-  // 3. ADD (Level 2: Backend Promotion)
+  // 3A. ADD (Level 2A: Reverse Proxy Promotion)
   // ----------------------------------------------------
   if (command === "add") {
     const domain = args[1];
-    const port = args[2];
+    const target = args[2];
 
-    if (!domain || !port || domain.startsWith("-") || port.startsWith("-")) {
+    if (!domain || !target || domain.startsWith("-") || target.startsWith("-")) {
       console.error(`
-❌ Error: 'add' requires 2 inputs: <domain> <port>
+❌ Error: 'add' requires 2 inputs: <domain> <port|path>
 
-Sample:
+Samples:
   npx caddy-subdomain add call.keshavsoft.com 5000
+  npx caddy-subdomain add call.keshavsoft.com /usr/share/caddy/call.keshavsoft.com
 `);
       process.exitCode = 1;
       return;
@@ -254,21 +262,97 @@ Sample:
     const configPath = resolveDefaultPath(nonFlags[0]);
 
     try {
+      const isStatic =
+        target.startsWith("/") || target.startsWith("./") || target.includes("\\");
+
       const result = addSubdomainToFile(configPath, {
         domain,
-        port: Number(port),
-        force: true, // auto-upgrades probe to backend!
+        target,
+        force: true, // auto-upgrades probe to backend/static!
         backup: !noBackup
       });
 
       console.log(`Subdomain:        ${domain}`);
-      console.log(`Target:           localhost:${port}`);
-      console.log(`Entry Type:       Level-2 Reverse Proxy`);
+      if (isStatic) {
+        console.log(`Document Root:    ${target}`);
+        console.log(`Entry Type:       Level-2 Static File Server (file_server)`);
+      } else {
+        console.log(`Target:           localhost:${target}`);
+        console.log(`Entry Type:       Level-2 Reverse Proxy`);
+      }
 
       // Automatic Caddy reload
       if (!noReload) {
         try {
           execSync(`caddy reload --config "${configPath}"`, { stdio: "ignore" });
+          console.log(`Caddy Reload:     Success`);
+        } catch {
+          console.log(`Caddy Reload:     Skipped (caddy server not running or binary not in PATH)`);
+        }
+      }
+      console.log(`Status:           Active`);
+
+      if (result.newRoute) {
+        console.log(`\nCaddy JSON Entry:`);
+        console.log(JSON.stringify(result.newRoute, null, 2));
+      }
+    } catch (err) {
+      console.error(`Error: ${err.message}`);
+      process.exitCode = 1;
+    }
+    return;
+  }
+
+  // ----------------------------------------------------
+  // 3B. STATIC (Level 2B: Static File Server Promotion)
+  // ----------------------------------------------------
+  if (command === "static") {
+    const domain = args[1];
+    if (!domain || domain.startsWith("-")) {
+      console.error(`
+❌ Error: 'static' requires at least 1 input: <domain> [rootPath]
+
+Samples:
+  npx caddy-subdomain static call.keshavsoft.com
+  npx caddy-subdomain static call.keshavsoft.com /usr/share/caddy/call.keshavsoft.com
+`);
+      process.exitCode = 1;
+      return;
+    }
+
+    const nonFlags = args.slice(2).filter((a) => !a.startsWith("-"));
+    let rootPath = nonFlags[0];
+    let configPath = nonFlags[1];
+
+    if (rootPath && rootPath.endsWith(".json")) {
+      configPath = rootPath;
+      rootPath = undefined;
+    }
+
+    if (!rootPath) {
+      rootPath = `/usr/share/caddy/${domain}`;
+    }
+
+    const resolvedConfig = resolveDefaultPath(configPath);
+    const noBackup = args.includes("--no-backup");
+    const noReload = args.includes("--no-reload");
+
+    try {
+      const result = addStaticSubdomainToFile(resolvedConfig, {
+        domain,
+        root: rootPath,
+        force: true, // auto-upgrades probe to static file server!
+        backup: !noBackup
+      });
+
+      console.log(`Subdomain:        ${domain}`);
+      console.log(`Document Root:    ${rootPath}`);
+      console.log(`Entry Type:       Level-2 Static File Server (file_server)`);
+
+      // Automatic Caddy reload
+      if (!noReload) {
+        try {
+          execSync(`caddy reload --config "${resolvedConfig}"`, { stdio: "ignore" });
           console.log(`Caddy Reload:     Success`);
         } catch {
           console.log(`Caddy Reload:     Skipped (caddy server not running or binary not in PATH)`);
@@ -303,9 +387,14 @@ Sample:
         console.log(`  (none configured)`);
       } else {
         details.forEach((item, i) => {
-          const typeBadge = item.type === "probe" ? "[probe]" : `[${item.type}]`;
+          const typeBadge =
+            item.type === "probe"
+              ? "[probe]"
+              : item.type === "file_server"
+              ? "[static]"
+              : `[${item.type}]`;
           const paddedDomain = item.domain.padEnd(28, " ");
-          console.log(`  ${i + 1}. ${paddedDomain} ➔  ${item.target.padEnd(20, " ")} ${typeBadge}`);
+          console.log(`  ${i + 1}. ${paddedDomain} ➔  ${item.target.padEnd(28, " ")} ${typeBadge}`);
         });
       }
     } catch (err) {

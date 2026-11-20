@@ -82,7 +82,7 @@
         <div>
           <div class="flex items-center justify-between mb-3">
             <span class="inline-flex items-center gap-1.5 text-xs font-mono font-bold text-amber-400 bg-amber-950/60 border border-amber-800/60 px-2.5 py-0.5 rounded-full">
-              Level 2: Backend Promotion
+              Level 2A: Reverse Proxy
             </span>
             <i class="bi bi-arrow-right text-zinc-500 group-hover:text-amber-400 group-hover:translate-x-1 transition"></i>
           </div>
@@ -95,6 +95,27 @@
         </div>
         <div class="bg-zinc-950 p-2.5 rounded-lg border border-zinc-800 text-[11px] font-mono text-zinc-300 truncate">
           <span class="text-amber-400">npx caddy-subdomain add</span> call.keshavsoft.com 5000
+        </div>
+      </a>
+
+      <!-- 2B. STATIC -->
+      <a href="static.html" class="group bg-zinc-900/70 border border-zinc-800 hover:border-amber-500/50 rounded-xl p-6 transition shadow-lg hover:shadow-amber-500/5 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <span class="inline-flex items-center gap-1.5 text-xs font-mono font-bold text-teal-400 bg-teal-950/60 border border-teal-800/60 px-2.5 py-0.5 rounded-full">
+              Level 2B: Static File Server
+            </span>
+            <i class="bi bi-arrow-right text-zinc-500 group-hover:text-amber-400 group-hover:translate-x-1 transition"></i>
+          </div>
+          <h2 class="text-xl font-bold text-white group-hover:text-amber-300 font-mono flex items-center gap-2 mb-2">
+            <span>static &lt;domain&gt; [root]</span>
+          </h2>
+          <p class="text-xs text-zinc-400 leading-relaxed mb-4">
+            Serve static HTML, SPAs, docs, or web assets directly via Caddy's native file_server with vars root and automatic gzip/zstd compression.
+          </p>
+        </div>
+        <div class="bg-zinc-950 p-2.5 rounded-lg border border-zinc-800 text-[11px] font-mono text-zinc-300 truncate">
+          <span class="text-amber-400">npx caddy-subdomain static</span> call.keshavsoft.com
         </div>
       </a>
 

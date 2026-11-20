@@ -67,16 +67,23 @@ npx caddy-subdomain probe call.keshavsoft.com
 
 ---
 
-### Level 2: Promote to Backend Reverse Proxy
-Now that the domain and SSL certificate are proven live, promote the subdomain to your actual application:
+### Level 2: Promote to Backend or Static File Server
+Now that the domain and SSL certificate are proven live, promote the subdomain to your actual architecture:
 
+#### Option A: Reverse Proxy (Node.js / Express / Docker / Go)
 ```bash
 npx caddy-subdomain add call.keshavsoft.com 5000
 ```
-
 - Replaces the probe with a clean `reverse_proxy` pointing to `localhost:5000`.
 - Automatically executes hot-reload in memory.
 - Retains existing TLS certificates—zero re-negotiation downtime!
+
+#### Option B: Static File Server (HTML / React / Vue SPAs / Docs)
+```bash
+npx caddy-subdomain static call.keshavsoft.com /usr/share/caddy/call.keshavsoft.com
+```
+- Configures Caddy's native `file_server` with `vars` root (matches `cli.keshavsoft.com` VPS setup).
+- Powered by `caddy-template` static engine with zero Node.js server overhead.
 
 ---
 
@@ -135,8 +142,8 @@ Live HTTPS:       Yes (200 OK - Verified)
 
 ---
 
-### 2. `caddy-subdomain add <domain> <port>`
-Appends or updates a reverse proxy route forwarding traffic to your backend target:
+### 2. `caddy-subdomain add <domain> <port|path>`
+Appends or updates a reverse proxy route or auto-detected static path:
 
 ```bash
 npx caddy-subdomain add call.keshavsoft.com 5000
@@ -146,13 +153,32 @@ npx caddy-subdomain add call.keshavsoft.com 5000
 ```text
 Subdomain:        call.keshavsoft.com
 Target:           localhost:5000
+Entry Type:       Level-2 Reverse Proxy
 Caddy Reload:     Success
 Status:           Active
 ```
 
 ---
 
-### 3. `caddy-subdomain check <domain>`
+### 3. `caddy-subdomain static <domain> [rootPath]`
+Configures a high-performance static file server route using Caddy's native `file_server`:
+
+```bash
+npx caddy-subdomain static call.keshavsoft.com /usr/share/caddy/call.keshavsoft.com
+```
+
+**Terminal Output:**
+```text
+Subdomain:        call.keshavsoft.com
+Document Root:    /usr/share/caddy/call.keshavsoft.com
+Entry Type:       Level-2 Static File Server (file_server)
+Caddy Reload:     Success
+Status:           Active
+```
+
+---
+
+### 4. `caddy-subdomain check <domain>`
 Direct presence check. Returns a clean binary **Yes** or **No**:
 
 ```bash
@@ -167,8 +193,8 @@ Present in Caddy: Yes
 
 ---
 
-### 4. `caddy-subdomain list`
-Prints an indexed list of every unique subdomain registered in Caddy:
+### 5. `caddy-subdomain list`
+Prints an indexed list of every unique subdomain registered in Caddy with its target:
 
 ```bash
 npx caddy-subdomain list
@@ -178,9 +204,9 @@ npx caddy-subdomain list
 ```text
 Config: /etc/caddy/caddy.json
 Subdomains (3):
-  1. quotation.keshavsoft.com
-  2. call.keshavsoft.com
-  3. appointment.keshavsoft.com
+  1. quotation.keshavsoft.com    ➔  localhost:8080       [reverse_proxy]
+  2. cli.keshavsoft.com          ➔  /usr/share/caddy     [static]
+  3. call.keshavsoft.com         ➔  static_response      [probe]
 ```
 
 ---
@@ -198,7 +224,9 @@ import {
   buildProbeRoute,
   addProbeSubdomainToFile,
   buildProxyRoute,
-  addSubdomainToFile
+  addSubdomainToFile,
+  buildStaticRoute,
+  addStaticSubdomainToFile
 } from "caddy-subdomain";
 ```
 

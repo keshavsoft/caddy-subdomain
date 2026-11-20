@@ -29,7 +29,11 @@ samples/
     │   ├── run.js
     │   ├── run.bat
     │   └── run.sh
-    └── 06-build-proxy-route/    # Low-level AST builder for proxy route
+    ├── 06-build-proxy-route/    # Low-level AST builder for proxy route
+    │   ├── run.js
+    │   ├── run.bat
+    │   └── run.sh
+    └── 07-static/               # Level-2 static file server promotion (file_server)
         ├── run.js
         ├── run.bat
         └── run.sh
