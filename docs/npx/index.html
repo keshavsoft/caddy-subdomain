@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NPX Commands Hub — caddy-subdomain</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+
+<body class="bg-zinc-950 text-zinc-100 antialiased min-h-screen flex flex-col font-sans selection:bg-amber-500/30 selection:text-amber-200">
+
+  <!-- Navbar -->
+  <nav class="border-b border-zinc-800 bg-zinc-900/90 backdrop-blur-md sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
+      <!-- Brand / Back -->
+      <div class="flex items-center gap-3">
+        <a href="../" class="flex items-center gap-1.5 text-zinc-400 hover:text-white transition text-xs font-mono">
+          <i class="bi bi-arrow-left"></i>
+          <span>Home</span>
+        </a>
+        <span class="text-zinc-700">/</span>
+        <div class="flex items-center gap-2">
+          <i class="bi bi-terminal-fill text-amber-400"></i>
+          <span class="font-bold text-sm tracking-wider uppercase text-zinc-200">NPX Commands Hub</span>
+        </div>
+      </div>
+
+      <!-- Links -->
+      <div class="flex items-center gap-2 text-xs font-mono">
+        <a href="probe.html" class="text-zinc-400 hover:text-white px-2 py-1 rounded hover:bg-zinc-800/80 transition hidden sm:inline">probe</a>
+        <a href="add.html" class="text-zinc-400 hover:text-white px-2 py-1 rounded hover:bg-zinc-800/80 transition hidden sm:inline">add</a>
+        <a href="list.html" class="text-zinc-400 hover:text-white px-2 py-1 rounded hover:bg-zinc-800/80 transition hidden sm:inline">list</a>
+        <a href="check.html" class="text-zinc-400 hover:text-white px-2 py-1 rounded hover:bg-zinc-800/80 transition hidden sm:inline">check</a>
+        <a href="https://github.com/keshavsoft/caddy-subdomain" target="_blank" class="text-zinc-400 hover:text-zinc-100 p-1.5 transition ml-2" title="GitHub">
+          <i class="bi bi-github text-base"></i>
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Header -->
+  <main class="flex-1 max-w-5xl mx-auto px-4 sm:px-6 py-12">
+    <div class="mb-10 text-center sm:text-left border-b border-zinc-800 pb-8">
+      <div class="inline-flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 text-amber-400 px-3 py-0.5 rounded-full text-xs font-mono font-medium mb-3">
+        <span>Zero Installation &bull; Run via NPX</span>
+      </div>
+      <h1 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">The NPX Command Catalog</h1>
+      <p class="text-zinc-400 text-sm mt-2 max-w-2xl">
+        Every command in <code class="text-zinc-200 font-mono">caddy-subdomain</code> is designed around a single responsibility in the subdomain lifecycle. Select a command below to explore its dedicated guide, options, and live workflow.
+      </p>
+    </div>
+
+    <!-- Commands Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+
+      <!-- 1. PROBE -->
+      <a href="probe.html" class="group bg-zinc-900/70 border border-zinc-800 hover:border-amber-500/50 rounded-xl p-6 transition shadow-lg hover:shadow-amber-500/5 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <span class="inline-flex items-center gap-1.5 text-xs font-mono font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-800/60 px-2.5 py-0.5 rounded-full">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              Level 1: Smoke Test
+            </span>
+            <i class="bi bi-arrow-right text-zinc-500 group-hover:text-amber-400 group-hover:translate-x-1 transition"></i>
+          </div>
+          <h2 class="text-xl font-bold text-white group-hover:text-amber-300 font-mono flex items-center gap-2 mb-2">
+            <span>probe &lt;domain&gt;</span>
+          </h2>
+          <p class="text-xs text-zinc-400 leading-relaxed mb-4">
+            Verify GoDaddy DNS propagation and Let's Encrypt SSL issuance without starting Node.js or allocating backend ports. Injects a native 200 OK static response.
+          </p>
+        </div>
+        <div class="bg-zinc-950 p-2.5 rounded-lg border border-zinc-800 text-[11px] font-mono text-zinc-300 truncate">
+          <span class="text-amber-400">npx caddy-subdomain probe</span> call.keshavsoft.com --reload
+        </div>
+      </a>
+
+      <!-- 2. ADD -->
+      <a href="add.html" class="group bg-zinc-900/70 border border-zinc-800 hover:border-amber-500/50 rounded-xl p-6 transition shadow-lg hover:shadow-amber-500/5 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <span class="inline-flex items-center gap-1.5 text-xs font-mono font-bold text-amber-400 bg-amber-950/60 border border-amber-800/60 px-2.5 py-0.5 rounded-full">
+              Level 2: Backend Promotion
+            </span>
+            <i class="bi bi-arrow-right text-zinc-500 group-hover:text-amber-400 group-hover:translate-x-1 transition"></i>
+          </div>
+          <h2 class="text-xl font-bold text-white group-hover:text-amber-300 font-mono flex items-center gap-2 mb-2">
+            <span>add &lt;domain&gt; &lt;port&gt;</span>
+          </h2>
+          <p class="text-xs text-zinc-400 leading-relaxed mb-4">
+            Connect your verified subdomain to your Node.js / Python / Docker backend port. Seamlessly replaces the Level-1 probe with zero downtime and automatic backup.
+          </p>
+        </div>
+        <div class="bg-zinc-950 p-2.5 rounded-lg border border-zinc-800 text-[11px] font-mono text-zinc-300 truncate">
+          <span class="text-amber-400">npx caddy-subdomain add</span> call.keshavsoft.com 5000 --force --reload
+        </div>
+      </a>
+
+      <!-- 3. LIST -->
+      <a href="list.html" class="group bg-zinc-900/70 border border-zinc-800 hover:border-amber-500/50 rounded-xl p-6 transition shadow-lg hover:shadow-amber-500/5 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <span class="inline-flex items-center gap-1.5 text-xs font-mono font-bold text-sky-400 bg-sky-950/60 border border-sky-800/60 px-2.5 py-0.5 rounded-full">
+              Observability
+            </span>
+            <i class="bi bi-arrow-right text-zinc-500 group-hover:text-amber-400 group-hover:translate-x-1 transition"></i>
+          </div>
+          <h2 class="text-xl font-bold text-white group-hover:text-amber-300 font-mono flex items-center gap-2 mb-2">
+            <span>list [configPath]</span>
+          </h2>
+          <p class="text-xs text-zinc-400 leading-relaxed mb-4">
+            Extract and index every active subdomain currently listening across all HTTP servers in your Caddy configuration. Zero JSON scrolling needed.
+          </p>
+        </div>
+        <div class="bg-zinc-950 p-2.5 rounded-lg border border-zinc-800 text-[11px] font-mono text-zinc-300 truncate">
+          <span class="text-amber-400">npx caddy-subdomain list</span> /etc/caddy/caddy.json
+        </div>
+      </a>
+
+      <!-- 4. CHECK -->
+      <a href="check.html" class="group bg-zinc-900/70 border border-zinc-800 hover:border-amber-500/50 rounded-xl p-6 transition shadow-lg hover:shadow-amber-500/5 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <span class="inline-flex items-center gap-1.5 text-xs font-mono font-bold text-purple-400 bg-purple-950/60 border border-purple-800/60 px-2.5 py-0.5 rounded-full">
+              Collision Guard
+            </span>
+            <i class="bi bi-arrow-right text-zinc-500 group-hover:text-amber-400 group-hover:translate-x-1 transition"></i>
+          </div>
+          <h2 class="text-xl font-bold text-white group-hover:text-amber-300 font-mono flex items-center gap-2 mb-2">
+            <span>check &lt;domain&gt;</span>
+          </h2>
+          <p class="text-xs text-zinc-400 leading-relaxed mb-4">
+            Pre-flight collision verification. Confirms whether a subdomain is available to be registered or already active on the server before mutating files.
+          </p>
+        </div>
+        <div class="bg-zinc-950 p-2.5 rounded-lg border border-zinc-800 text-[11px] font-mono text-zinc-300 truncate">
+          <span class="text-amber-400">npx caddy-subdomain check</span> quotation.keshavsoft.com
+        </div>
+      </a>
+
+    </div>
+
+    <!-- Quick Reference Cheat-Sheet -->
+    <div class="bg-zinc-900/80 border border-zinc-800 rounded-xl p-6">
+      <h3 class="text-sm font-bold text-white uppercase tracking-wider mb-4 flex items-center gap-2">
+        <i class="bi bi-table text-amber-400"></i>
+        <span>Command Cheat-Sheet</span>
+      </h3>
+      <div class="overflow-x-auto text-xs font-mono">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="border-b border-zinc-800 text-zinc-400">
+              <th class="py-2.5 px-3">Command</th>
+              <th class="py-2.5 px-3">Key Arguments</th>
+              <th class="py-2.5 px-3">Supported Flags</th>
+              <th class="py-2.5 px-3">Documentation</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-zinc-800/60 text-zinc-300">
+            <tr>
+              <td class="py-2.5 px-3 font-bold text-emerald-400">probe</td>
+              <td class="py-2.5 px-3">&lt;domain&gt; [path]</td>
+              <td class="py-2.5 px-3 text-zinc-400">--reload, --force, --no-backup</td>
+              <td class="py-2.5 px-3"><a href="probe.html" class="text-amber-400 hover:underline">Read Guide &rarr;</a></td>
+            </tr>
+            <tr>
+              <td class="py-2.5 px-3 font-bold text-amber-400">add</td>
+              <td class="py-2.5 px-3">&lt;domain&gt; &lt;port&gt; [path]</td>
+              <td class="py-2.5 px-3 text-zinc-400">--reload, --force, --no-backup</td>
+              <td class="py-2.5 px-3"><a href="add.html" class="text-amber-400 hover:underline">Read Guide &rarr;</a></td>
+            </tr>
+            <tr>
+              <td class="py-2.5 px-3 font-bold text-sky-400">list</td>
+              <td class="py-2.5 px-3">[path]</td>
+              <td class="py-2.5 px-3 text-zinc-400">—</td>
+              <td class="py-2.5 px-3"><a href="list.html" class="text-amber-400 hover:underline">Read Guide &rarr;</a></td>
+            </tr>
+            <tr>
+              <td class="py-2.5 px-3 font-bold text-purple-400">check</td>
+              <td class="py-2.5 px-3">&lt;domain&gt; [path]</td>
+              <td class="py-2.5 px-3 text-zinc-400">—</td>
+              <td class="py-2.5 px-3"><a href="check.html" class="text-amber-400 hover:underline">Read Guide &rarr;</a></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <footer class="w-full border-t border-zinc-800/80 py-6 text-center text-xs text-zinc-500">
+    <p>&copy; KeshavSoft &bull; ISC License &bull; <a href="../" class="text-amber-400 hover:underline">Back to Main Portal</a></p>
+  </footer>
+</body>
+</html>
